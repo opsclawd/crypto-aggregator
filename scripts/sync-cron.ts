@@ -59,11 +59,24 @@ function createJob(job: ReturnType<typeof loadCronConfig>['jobs'][number], defau
   }
   if (exact) args.push('--exact');
 
+  // IMPORTANT: isolated cron defaults to announce delivery when delivery is omitted.
+  // So we must be explicit:
+  // - announce=true  → --announce + explicit channel/to
+  // - announce=false → --no-deliver
   const channel = expandEnv(job.channel);
   const to = expandEnv(job.to);
-  if (announce) args.push('--announce');
-  if (announce && channel) args.push('--channel', channel);
-  if (announce && to) args.push('--to', to);
+
+  if (announce) {
+    if (!channel || !to) {
+      throw new Error(
+        `Job "${job.name}" has announce=true but channel/to are empty after env expansion. ` +
+          `Refusing to create an ambiguous delivery route. Set OPENCLAW_CHANNEL and OPENCLAW_TO (or hardcode channel/to in config/cron.yaml).`
+      );
+    }
+    args.push('--announce', '--channel', channel, '--to', to);
+  } else {
+    args.push('--no-deliver');
+  }
 
   console.log(`Creating cron job: ${job.name}`);
   runOpenClaw(args);

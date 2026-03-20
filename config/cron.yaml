@@ -6,25 +6,27 @@ defaults:
   announce: false
 
 jobs:
-  - key: rss-fetch
-    name: Crypto RSS fetch
-    cron: "5 * * * *"
-    messageFile: prompts/jobs/rss-fetch.txt
+  # One daily collector window → one daily brief
+
+  - key: youtube-feed-fetch
+    name: YouTube feed fetch
+    cron: "45 5 * * *"
+    messageFile: prompts/jobs/youtube-feed-fetch.txt
     model: gpt-5
     thinking: low
     enabled: true
 
-  - key: youtube-feed-fetch
-    name: YouTube feed fetch
-    cron: "12 * * * *"
-    messageFile: prompts/jobs/youtube-feed-fetch.txt
+  - key: rss-fetch
+    name: Crypto RSS fetch
+    cron: "0 6 * * *"
+    messageFile: prompts/jobs/rss-fetch.txt
     model: gpt-5
     thinking: low
     enabled: true
 
   - key: x-list-collect
     name: X list collect
-    cron: "20 * * * *"
+    cron: "10 6 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
     model: gpt-5
     thinking: medium
@@ -32,7 +34,7 @@ jobs:
 
   - key: x-account-collect
     name: X account collect
-    cron: "35 * * * *"
+    cron: "20 6 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
     model: gpt-5
     thinking: medium
@@ -40,7 +42,7 @@ jobs:
 
   - key: normalize
     name: Normalize crypto items
-    cron: "45 * * * *"
+    cron: "30 6 * * *"
     messageFile: prompts/jobs/normalize.txt
     model: gpt-5
     thinking: low
@@ -48,7 +50,7 @@ jobs:
 
   - key: render-brief-input
     name: Render brief input
-    cron: "50 6 * * *"
+    cron: "40 6 * * *"
     messageFile: prompts/jobs/render-brief-input.txt
     model: gpt-5
     thinking: low
@@ -64,3 +66,29 @@ jobs:
     channel: "${OPENCLAW_CHANNEL}"
     to: "${OPENCLAW_TO}"
     enabled: true
+
+  # Optional second X pass (PM refresh). Disabled by default.
+
+  - key: x-list-collect-pm
+    name: X list collect (PM)
+    cron: "0 18 * * *"
+    messageFile: prompts/jobs/x-list-collect.txt
+    model: gpt-5
+    thinking: medium
+    enabled: false
+
+  - key: x-account-collect-pm
+    name: X account collect (PM)
+    cron: "10 18 * * *"
+    messageFile: prompts/jobs/x-account-collect.txt
+    model: gpt-5
+    thinking: medium
+    enabled: false
+
+  - key: normalize-pm
+    name: Normalize crypto items (PM)
+    cron: "20 18 * * *"
+    messageFile: prompts/jobs/normalize.txt
+    model: gpt-5
+    thinking: low
+    enabled: false

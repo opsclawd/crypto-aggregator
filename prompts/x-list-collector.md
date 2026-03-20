@@ -2,6 +2,21 @@
 
 Open the X list defined in `config/sources.yaml` using the logged-in OpenClaw browser profile.
 
+## Overlap protection (required)
+
+Before doing any browser work:
+
+- Check for `state/x-collect.lock.json`.
+  - If it exists and its `createdAt` is less than 20 minutes ago, **exit immediately** (another run is still active or got stuck recently).
+- Otherwise, create/overwrite `state/x-collect.lock.json` with:
+  - `kind: "x-collect"`
+  - `job: "x-list"`
+  - `createdAt`: ISO timestamp
+
+At the end (success or failure), delete `state/x-collect.lock.json`.
+
+## Collection behavior
+
 Collect only fresh posts that are new relative to the latest checkpoint in `state/x-list-checkpoint.json`.
 
 Write a JSON array to:
