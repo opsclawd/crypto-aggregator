@@ -1,0 +1,1 @@
+In the current workspace repo, follow `prompts/x-list-collector.md`. Use the browser tool for X collection and the fs/apply_patch tools only to write the JSON output and checkpoint files. Do not announce a narrative summary.

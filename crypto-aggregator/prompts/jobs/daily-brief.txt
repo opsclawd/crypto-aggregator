@@ -1,0 +1,1 @@
+In the current workspace repo, follow `prompts/daily-brief.md` and `skills/crypto-brief/SKILL.md`. Read `out/brief-input.md`, write the final markdown brief to `out/daily-brief-YYYY-MM-DD.md`, and then announce the final brief.

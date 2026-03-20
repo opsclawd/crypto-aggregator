@@ -1,0 +1,1 @@
+In the current workspace repo, use exec to run `pnpm tsx scripts/fetch-rss.ts`. Do not announce a narrative summary. If the command succeeds, stop.

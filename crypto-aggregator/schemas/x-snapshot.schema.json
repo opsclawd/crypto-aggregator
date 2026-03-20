@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "XSnapshotItem",
+  "type": "object",
+  "required": [
+    "sourceType",
+    "sourceLabel",
+    "authorHandle",
+    "postUrl",
+    "capturedAt",
+    "rawText",
+    "isRepost"
+  ],
+  "properties": {
+    "sourceType": { "type": "string", "enum": ["x-list", "x-account"] },
+    "sourceLabel": { "type": "string" },
+    "authorHandle": { "type": "string" },
+    "displayName": { "type": ["string", "null"] },
+    "postUrl": { "type": "string" },
+    "postedAtText": { "type": ["string", "null"] },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "rawText": { "type": "string" },
+    "quotedPostUrl": { "type": ["string", "null"] },
+    "mediaUrls": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "isRepost": { "type": "boolean" },
+    "assetHints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "category": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

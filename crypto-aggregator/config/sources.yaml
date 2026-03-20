@@ -1,0 +1,55 @@
+defaultTimezone: America/Edmonton
+
+x:
+  list:
+    id: "1527662728176734208"
+    url: "https://x.com/i/lists/1527662728176734208"
+    label: crypto-core
+  accounts:
+    - handle: Morecryptoonl
+      url: "https://x.com/Morecryptoonl"
+      category: ta
+      assets: [btc, eth, sol]
+      enabled: true
+
+youtube:
+  channels:
+    - label: morecryptoonline
+      handle: morecryptoonline
+      url: "https://www.youtube.com/@morecryptoonline"
+      category: ta
+      assets: [btc, eth, sol]
+      enabled: true
+      channelId: null
+
+rss:
+  feeds:
+    - label: broad-crypto-1
+      category: news
+      assets: [crypto]
+      url: "https://www.theblock.co/rss.xml"
+      enabled: true
+    - label: broad-crypto-2
+      category: news
+      assets: [crypto]
+      url: "https://cointelegraph.com/rss"
+      enabled: true
+    - label: btc-news
+      category: news
+      assets: [btc]
+      url: "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml"
+      enabled: true
+    - label: eth-news
+      category: news
+      assets: [eth]
+      url: "https://www.thedefiant.io/feed"
+      enabled: true
+    - label: sol-news
+      category: news
+      assets: [sol]
+      url: "https://solanafloor.com/feed"
+      enabled: true
+
+topics:
+  primary: [crypto, btc, eth, sol]
+  taSeparately: true

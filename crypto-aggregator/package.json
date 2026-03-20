@@ -1,0 +1,29 @@
+{
+  "name": "crypto-aggregator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Repo-managed OpenClaw crypto news aggregator using browser-based X collection and feed-based YouTube/RSS ingestion.",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "bootstrap": "tsx scripts/init.ts",
+    "fetch:rss": "tsx scripts/fetch-rss.ts",
+    "fetch:youtube": "tsx scripts/fetch-youtube-feeds.ts",
+    "normalize": "tsx scripts/normalize.ts",
+    "brief:input": "tsx scripts/render-brief-input.ts",
+    "cron:sync": "tsx scripts/sync-cron.ts",
+    "validate": "tsx scripts/validate-config.ts"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

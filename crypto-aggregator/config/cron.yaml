@@ -1,0 +1,66 @@
+defaults:
+  tz: America/Edmonton
+  session: isolated
+  agent: default
+  exact: true
+  announce: false
+
+jobs:
+  - key: rss-fetch
+    name: Crypto RSS fetch
+    cron: "5 * * * *"
+    messageFile: prompts/jobs/rss-fetch.txt
+    model: gpt-5
+    thinking: low
+    enabled: true
+
+  - key: youtube-feed-fetch
+    name: YouTube feed fetch
+    cron: "12 * * * *"
+    messageFile: prompts/jobs/youtube-feed-fetch.txt
+    model: gpt-5
+    thinking: low
+    enabled: true
+
+  - key: x-list-collect
+    name: X list collect
+    cron: "20 * * * *"
+    messageFile: prompts/jobs/x-list-collect.txt
+    model: gpt-5
+    thinking: medium
+    enabled: true
+
+  - key: x-account-collect
+    name: X account collect
+    cron: "35 * * * *"
+    messageFile: prompts/jobs/x-account-collect.txt
+    model: gpt-5
+    thinking: medium
+    enabled: true
+
+  - key: normalize
+    name: Normalize crypto items
+    cron: "45 * * * *"
+    messageFile: prompts/jobs/normalize.txt
+    model: gpt-5
+    thinking: low
+    enabled: true
+
+  - key: render-brief-input
+    name: Render brief input
+    cron: "50 6 * * *"
+    messageFile: prompts/jobs/render-brief-input.txt
+    model: gpt-5
+    thinking: low
+    enabled: true
+
+  - key: daily-brief
+    name: Daily crypto brief
+    cron: "0 7 * * *"
+    messageFile: prompts/jobs/daily-brief.txt
+    model: gpt-5
+    thinking: high
+    announce: true
+    channel: "${OPENCLAW_CHANNEL}"
+    to: "${OPENCLAW_TO}"
+    enabled: true
