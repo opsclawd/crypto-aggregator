@@ -4,16 +4,18 @@ Open the X list defined in `config/sources.yaml` using the logged-in OpenClaw br
 
 ## Overlap protection (required)
 
+This repo uses an executable lock helper.
+
 Before doing any browser work:
 
-- Check for `state/x-collect.lock.json`.
-  - If it exists and its `createdAt` is less than 20 minutes ago, **exit immediately** (another run is still active or got stuck recently).
-- Otherwise, create/overwrite `state/x-collect.lock.json` with:
-  - `kind: "x-collect"`
-  - `job: "x-list"`
-  - `createdAt`: ISO timestamp
+- Run:
+  - `pnpm tsx scripts/x-collect-lock.ts acquire x-list 25`
+- If it exits non-zero, STOP (another run is active/recent).
 
-At the end (success or failure), delete `state/x-collect.lock.json`.
+At the end (success or failure):
+
+- Run:
+  - `pnpm tsx scripts/x-collect-lock.ts release`
 
 ## Collection behavior
 

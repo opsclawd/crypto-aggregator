@@ -1,0 +1,8 @@
+In the current workspace repo:
+
+Read `out/market-map-input.json` and follow `prompts/market-map.md`.
+
+Write the final report to:
+- out/morning-market-map-YYYY-MM-DD.md
+
+If you are configured to announce, announce ONLY the report content.

@@ -1,0 +1,11 @@
+In the current workspace repo:
+
+Follow `prompts/catalyst-extractor.md`.
+
+- Read the catalyst extraction input JSON under out/.
+- Output JSON to: out/catalysts-YYYY-MM-DD.json
+- Output ONLY the JSON file content (no markdown).
+
+Use fs/apply_patch to write the file.
+Do not browse.
+Do not summarize.

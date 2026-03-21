@@ -4,6 +4,15 @@ import { hashId } from './lib/common.js';
 import { isoDay, readJson, resolveFromRoot, writeJson } from './lib/fs.js';
 import type { NormalizedItem, RssRawItem, XRawItem, YouTubeRawItem } from './lib/types.js';
 
+type YouTubeTranscriptItem = {
+  videoId: string;
+  fetchedAt: string;
+  /** plain text transcript (no timestamps) */
+  transcriptText: string;
+  language?: string | null;
+  method: 'browser' | 'api' | 'unknown';
+};
+
 function listJsonFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir)
@@ -12,10 +21,24 @@ function listJsonFiles(dir: string): string[] {
     .sort();
 }
 
+function categoryToLane(category: string): NormalizedItem['lane'] {
+  if (category === 'ta' || category === 'thesis') return 'thesis';
+  if (category === 'catalyst') return 'catalyst';
+  return 'news';
+}
+
+function laneToBucket(lane: NormalizedItem['lane']): NormalizedItem['bucket'] {
+  if (lane === 'thesis') return 'ta';
+  if (lane === 'catalyst') return 'catalyst';
+  return 'news';
+}
+
 function toNormalizedFromRss(item: RssRawItem): NormalizedItem {
+  const lane = categoryToLane(item.category);
   return {
     id: hashId(['rss', item.link]),
-    bucket: item.category === 'ta' ? 'ta' : 'news',
+    lane,
+    bucket: laneToBucket(lane),
     sourceKind: 'rss',
     sourceLabel: item.feedLabel,
     title: item.title,
@@ -25,24 +48,29 @@ function toNormalizedFromRss(item: RssRawItem): NormalizedItem {
     collectedAt: item.fetchedAt,
     assets: item.assets,
     category: item.category,
-    confidence: 'medium'
+    confidence: lane === 'news' ? 'low' : 'medium'
   };
 }
 
-function toNormalizedFromYouTube(item: YouTubeRawItem): NormalizedItem {
+function toNormalizedFromYouTube(item: YouTubeRawItem, transcriptByVideoId: Map<string, YouTubeTranscriptItem>): NormalizedItem {
+  const lane = categoryToLane(item.category);
+  const transcript = transcriptByVideoId.get(item.videoId);
+  const hasTranscript = Boolean(transcript?.transcriptText?.trim());
   return {
     id: hashId(['youtube', item.videoId]),
-    bucket: item.category === 'ta' ? 'ta' : 'news',
+    lane,
+    bucket: laneToBucket(lane),
     sourceKind: 'youtube',
     sourceLabel: item.channelLabel,
     title: item.title,
-    text: item.title,
+    text: hasTranscript ? transcript!.transcriptText : item.title,
     url: item.link,
     publishedAt: item.published || item.updated || null,
     collectedAt: item.fetchedAt,
     assets: item.assets,
     category: item.category,
-    confidence: 'medium'
+    confidence: hasTranscript ? 'high' : (lane === 'news' ? 'low' : 'medium'),
+    limitations: hasTranscript ? undefined : ['youtube:transcript_unavailable']
   };
 }
 
@@ -59,9 +87,11 @@ function inferAssets(text: string): string[] {
 function toNormalizedFromX(item: XRawItem): NormalizedItem {
   const assets = item.assetHints && item.assetHints.length > 0 ? item.assetHints : inferAssets(item.rawText);
   const category = item.category || 'ta';
+  const lane = categoryToLane(category);
   return {
     id: hashId(['x', item.postUrl]),
-    bucket: category === 'ta' ? 'ta' : 'news',
+    lane,
+    bucket: laneToBucket(lane),
     sourceKind: 'x',
     sourceLabel: item.sourceLabel,
     title: `${item.authorHandle} post`,
@@ -71,7 +101,7 @@ function toNormalizedFromX(item: XRawItem): NormalizedItem {
     collectedAt: item.capturedAt,
     assets,
     category,
-    confidence: item.isRepost ? 'low' : 'medium'
+    confidence: item.isRepost ? 'low' : (lane === 'news' ? 'low' : 'medium')
   };
 }
 
@@ -87,7 +117,14 @@ function main(): void {
   const day = isoDay();
   const rssDir = resolveFromRoot('data', 'raw', day, 'rss');
   const youtubeDir = resolveFromRoot('data', 'raw', day, 'youtube');
+  const youtubeTranscriptsDir = resolveFromRoot('data', 'raw', day, 'youtube-transcripts');
   const xDir = resolveFromRoot('data', 'raw', day, 'x');
+
+  const transcriptByVideoId = new Map<string, YouTubeTranscriptItem>();
+  for (const file of listJsonFiles(youtubeTranscriptsDir)) {
+    const t = readJson<YouTubeTranscriptItem>(file, null as any);
+    if (t?.videoId) transcriptByVideoId.set(t.videoId, t);
+  }
 
   const normalized: NormalizedItem[] = [];
 
@@ -98,7 +135,7 @@ function main(): void {
 
   for (const file of listJsonFiles(youtubeDir)) {
     const payload = readJson<YouTubeRawItem[]>(file, []);
-    normalized.push(...payload.map(toNormalizedFromYouTube));
+    normalized.push(...payload.map((it) => toNormalizedFromYouTube(it, transcriptByVideoId)));
   }
 
   for (const file of listJsonFiles(xDir)) {

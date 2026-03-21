@@ -1,0 +1,9 @@
+In the current workspace repo:
+
+Read `out/market-map-input.json` and follow `prompts/midday-delta.md`.
+
+Write output to:
+- out/midday-delta-YYYY-MM-DD.md
+
+If the output is NO_MATERIAL_CHANGE, still write that exact string to the file.
+Announce nothing unless the output is a real delta report.

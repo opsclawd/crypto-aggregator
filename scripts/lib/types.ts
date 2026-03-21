@@ -1,9 +1,18 @@
 export type AssetTag = 'crypto' | 'btc' | 'eth' | 'sol' | string;
 
+export type Lane = 'thesis' | 'catalyst' | 'news';
+
 export interface XAccountConfig {
   handle: string;
   url: string;
+  /**
+   * category is kept for backwards compatibility (e.g. "ta").
+   * Prefer lane for product logic.
+   */
   category: string;
+  lane?: Lane;
+  /** Relative importance inside the same lane/sourceKind. Default = 1. */
+  weight?: number;
   assets: AssetTag[];
   enabled: boolean;
 }
@@ -13,6 +22,8 @@ export interface YouTubeChannelConfig {
   handle?: string | null;
   url: string;
   category: string;
+  lane?: Lane;
+  weight?: number;
   assets: AssetTag[];
   enabled: boolean;
   channelId?: string | null;
@@ -21,6 +32,8 @@ export interface YouTubeChannelConfig {
 export interface RssFeedConfig {
   label: string;
   category: string;
+  lane?: Lane;
+  weight?: number;
   assets: AssetTag[];
   url: string;
   enabled: boolean;
@@ -125,10 +138,18 @@ export interface XRawItem {
 
 export interface NormalizedItem {
   id: string;
-  bucket: 'news' | 'ta';
-  sourceKind: 'rss' | 'youtube' | 'x';
+  /** Product lane (thesis/catalyst/news). */
+  lane: Lane;
+  /** Legacy field; kept to avoid breaking existing scripts/state. */
+  bucket: 'news' | 'ta' | 'catalyst';
+  sourceKind: 'rss' | 'youtube' | 'x' | 'official';
   sourceLabel: string;
+  sourceWeight?: number;
   title: string;
+  /**
+   * text is the primary content field used for extraction.
+   * For YouTube, this may be upgraded from title → transcript.
+   */
   text: string;
   url: string;
   publishedAt: string | null;
@@ -136,4 +157,6 @@ export interface NormalizedItem {
   assets: AssetTag[];
   category: string;
   confidence: 'high' | 'medium' | 'low';
+  /** If present, indicates we could not extract deep content (e.g. YouTube transcript unavailable). */
+  limitations?: string[];
 }

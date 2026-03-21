@@ -1,0 +1,3 @@
+In the current workspace repo, follow `prompts/youtube-transcript-collector.md`.
+Use the browser tool for YouTube transcript collection and the fs/apply_patch tools only to write the JSON transcript output files.
+Do not announce a narrative summary.

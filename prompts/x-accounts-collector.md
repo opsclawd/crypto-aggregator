@@ -6,14 +6,12 @@ For each enabled X account in `config/sources.yaml`, open the account page in th
 
 Before doing any browser work:
 
-- Check for `state/x-collect.lock.json`.
-  - If it exists and its `createdAt` is less than 20 minutes ago, **exit immediately**.
-- Otherwise, create/overwrite `state/x-collect.lock.json` with:
-  - `kind: "x-collect"`
-  - `job: "x-accounts"`
-  - `createdAt`: ISO timestamp
+- Run: `pnpm tsx scripts/x-collect-lock.ts acquire x-accounts 25`
+- If it exits non-zero, STOP.
 
-At the end (success or failure), delete `state/x-collect.lock.json`.
+At the end (success or failure):
+
+- Run: `pnpm tsx scripts/x-collect-lock.ts release`
 
 Write one JSON file per account to:
 

@@ -1,0 +1,7 @@
+In the current workspace repo:
+
+1) Run:
+   pnpm tsx scripts/fetch-youtube-transcripts.ts
+
+2) Do not browse.
+3) Do not summarize.

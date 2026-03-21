@@ -15,6 +15,8 @@ const SourcesSchema = z.object({
       handle: z.string(),
       url: z.string().url(),
       category: z.string(),
+      lane: z.enum(['thesis', 'catalyst', 'news']).optional(),
+      weight: z.number().positive().optional(),
       assets: z.array(z.string()),
       enabled: z.boolean()
     }))
@@ -25,6 +27,8 @@ const SourcesSchema = z.object({
       handle: z.string().nullable().optional(),
       url: z.string().url(),
       category: z.string(),
+      lane: z.enum(['thesis', 'catalyst', 'news']).optional(),
+      weight: z.number().positive().optional(),
       assets: z.array(z.string()),
       enabled: z.boolean(),
       channelId: z.string().nullable().optional()
@@ -34,6 +38,8 @@ const SourcesSchema = z.object({
     feeds: z.array(z.object({
       label: z.string(),
       category: z.string(),
+      lane: z.enum(['thesis', 'catalyst', 'news']).optional(),
+      weight: z.number().positive().optional(),
       assets: z.array(z.string()),
       url: z.string().url(),
       enabled: z.boolean()

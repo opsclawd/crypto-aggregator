@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/thesis.schema.json",
+  "title": "Thesis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset",
+    "timeframe",
+    "bias",
+    "setupType",
+    "supportLevels",
+    "resistanceLevels",
+    "entryZone",
+    "targets",
+    "invalidation",
+    "trigger",
+    "chartReference",
+    "sourceHandle",
+    "sourceKind",
+    "sourceReliability",
+    "rawThesisText",
+    "collectedAt",
+    "publishedAt"
+  ],
+  "properties": {
+    "asset": { "type": "string", "enum": ["btc", "eth", "sol"] },
+    "timeframe": { "type": "string", "enum": ["intraday", "swing", "macro", "unknown"] },
+    "bias": { "type": "string", "enum": ["bullish", "bearish", "neutral", "mixed"] },
+    "setupType": {
+      "type": "string",
+      "enum": [
+        "breakout",
+        "breakdown",
+        "range",
+        "trend continuation",
+        "mean reversion",
+        "reclaim",
+        "rejection",
+        "unknown"
+      ]
+    },
+    "supportLevels": { "type": "array", "items": { "type": "string" } },
+    "resistanceLevels": { "type": "array", "items": { "type": "string" } },
+    "entryZone": { "type": ["string", "null"] },
+    "targets": { "type": "array", "items": { "type": "string" } },
+    "invalidation": { "type": ["string", "null"] },
+    "trigger": { "type": ["string", "null"] },
+    "chartReference": { "type": ["string", "null"], "description": "URL or description of chart/timestamp; may be null." },
+
+    "sourceHandle": { "type": "string" },
+    "sourceChannel": { "type": ["string", "null"], "description": "Optional human label/channel name" },
+    "sourceKind": { "type": "string", "enum": ["x", "youtube", "rss", "official"] },
+    "sourceReliability": { "type": "string", "enum": ["low", "medium", "high"] },
+
+    "rawThesisText": { "type": "string" },
+    "collectedAt": { "type": "string" },
+    "publishedAt": { "type": ["string", "null"] },
+
+    "sourceUrl": { "type": ["string", "null"] },
+    "notes": { "type": ["string", "null"] }
+  }
+}

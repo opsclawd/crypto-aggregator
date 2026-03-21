@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/catalyst.schema.json",
+  "title": "Catalyst",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "summary",
+    "assets",
+    "status",
+    "when",
+    "sourceKind",
+    "sourceLabel",
+    "sourceUrl",
+    "collectedAt",
+    "publishedAt"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "macro",
+        "rates",
+        "cpi",
+        "fed",
+        "etf",
+        "regulatory",
+        "exploit",
+        "outage",
+        "protocol-incident",
+        "exchange",
+        "listing",
+        "delisting",
+        "token-unlock",
+        "governance",
+        "ecosystem",
+        "liquidations",
+        "derivatives",
+        "unknown"
+      ]
+    },
+    "summary": { "type": "string" },
+    "assets": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["rumor", "confirmed", "scheduled", "unknown"] },
+    "when": { "type": ["string", "null"], "description": "ISO timestamp if known, else null" },
+
+    "sourceKind": { "type": "string", "enum": ["rss", "official", "x", "youtube"] },
+    "sourceLabel": { "type": "string" },
+    "sourceUrl": { "type": "string" },
+    "collectedAt": { "type": "string" },
+    "publishedAt": { "type": ["string", "null"] },
+
+    "impact": { "type": "string", "enum": ["low", "medium", "high"], "default": "medium" },
+    "notes": { "type": ["string", "null"] }
+  }
+}
