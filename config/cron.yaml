@@ -6,89 +6,148 @@ defaults:
   announce: false
 
 jobs:
-  # One daily collector window → one daily brief
+  # One daily collector window → TA-first Morning Market Map
 
   - key: youtube-feed-fetch
     name: YouTube feed fetch
     cron: "45 5 * * *"
     messageFile: prompts/jobs/youtube-feed-fetch.txt
-    model: gpt-5
+    model: 41-mini
     thinking: low
     enabled: true
 
+  - key: youtube-transcript-queue
+    name: YouTube transcript queue
+    cron: "50 5 * * *"
+    messageFile: prompts/jobs/youtube-transcript-queue.txt
+    model: 41-mini
+    thinking: low
+    enabled: true
+
+  - key: youtube-transcript-collect
+    name: YouTube transcript collect (browser)
+    cron: "55 5 * * *"
+    messageFile: prompts/jobs/youtube-transcript-collect.txt
+    model: 5-mini
+    thinking: medium
+    enabled: true
+
   - key: rss-fetch
-    name: Crypto RSS fetch
+    name: Catalyst + official RSS fetch
     cron: "0 6 * * *"
     messageFile: prompts/jobs/rss-fetch.txt
-    model: gpt-5
+    model: 41-mini
     thinking: low
     enabled: true
 
   - key: x-list-collect
-    name: X list collect
+    name: X analyst list collect
     cron: "10 6 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
-    model: gpt-5
+    model: 5-mini
     thinking: medium
     enabled: true
 
   - key: x-account-collect
-    name: X account collect
+    name: X key accounts collect
     cron: "20 6 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
-    model: gpt-5
+    model: 5-mini
     thinking: medium
     enabled: true
 
   - key: normalize
-    name: Normalize crypto items
+    name: Normalize + enrich items
     cron: "30 6 * * *"
     messageFile: prompts/jobs/normalize.txt
-    model: gpt-5
+    model: 41-mini
     thinking: low
     enabled: true
 
-  - key: render-brief-input
-    name: Render brief input
+  - key: render-extraction-inputs
+    name: Render extraction inputs (thesis/catalyst)
+    cron: "35 6 * * *"
+    messageFile: prompts/jobs/render-extraction-inputs.txt
+    model: 41-mini
+    thinking: low
+    enabled: true
+
+  - key: extract-theses
+    name: Extract TA theses (structured)
     cron: "40 6 * * *"
-    messageFile: prompts/jobs/render-brief-input.txt
-    model: gpt-5
+    messageFile: prompts/jobs/extract-theses.txt
+    model: 5-mini
+    thinking: medium
+    enabled: true
+
+  - key: extract-catalysts
+    name: Extract catalysts (high-signal)
+    cron: "45 6 * * *"
+    messageFile: prompts/jobs/extract-catalysts.txt
+    model: 5-mini
+    thinking: medium
+    enabled: true
+
+  - key: update-thesis-ledger
+    name: Update thesis ledger + delta
+    cron: "50 6 * * *"
+    messageFile: prompts/jobs/update-thesis-ledger.txt
+    model: 41-mini
     thinking: low
     enabled: true
 
-  - key: daily-brief
-    name: Daily crypto brief
-    cron: "0 7 * * *"
-    messageFile: prompts/jobs/daily-brief.txt
-    model: gpt-5
+  - key: render-market-map-input
+    name: Render Morning Market Map input bundle
+    cron: "55 6 * * *"
+    messageFile: prompts/jobs/render-market-map-input.txt
+    model: 41-mini
+    thinking: low
+    enabled: true
+
+  - key: morning-market-map
+    name: Morning Market Map (TA-first)
+    cron: "5 7 * * *"
+    messageFile: prompts/jobs/morning-market-map.txt
+    model: gpt
     thinking: high
     announce: true
     channel: "${OPENCLAW_CHANNEL}"
     to: "${OPENCLAW_TO}"
     enabled: true
 
+  # Optional midday delta. Disabled by default.
+
+  - key: midday-delta
+    name: Midday Delta (material changes only)
+    cron: "0 13 * * *"
+    messageFile: prompts/jobs/midday-delta.txt
+    model: 5-mini
+    thinking: medium
+    announce: false
+    enabled: false
+
   # Optional second X pass (PM refresh). Disabled by default.
 
   - key: x-list-collect-pm
-    name: X list collect (PM)
+    name: X analyst list collect (PM)
     cron: "0 18 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
-    model: gpt-5
+    model: 5-mini
     thinking: medium
     enabled: false
 
   - key: x-account-collect-pm
-    name: X account collect (PM)
+    name: X key accounts collect (PM)
     cron: "10 18 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
-    model: gpt-5
+    model: 5-mini
     thinking: medium
     enabled: false
 
   - key: normalize-pm
-    name: Normalize crypto items (PM)
+    name: Normalize + enrich items (PM)
     cron: "20 18 * * *"
     messageFile: prompts/jobs/normalize.txt
-    model: gpt-5
+    model: 41-mini
     thinking: low
     enabled: false

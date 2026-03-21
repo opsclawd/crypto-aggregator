@@ -11,7 +11,11 @@
     "bootstrap": "tsx scripts/init.ts",
     "fetch:rss": "tsx scripts/fetch-rss.ts",
     "fetch:youtube": "tsx scripts/fetch-youtube-feeds.ts",
+    "fetch:youtube-transcripts": "tsx scripts/fetch-youtube-transcripts.ts",
     "normalize": "tsx scripts/normalize.ts",
+    "extract:inputs": "tsx scripts/render-extraction-inputs.ts",
+    "ledger:update": "tsx scripts/update-thesis-ledger.ts",
+    "market-map:input": "tsx scripts/render-market-map.ts",
     "brief:input": "tsx scripts/render-brief-input.ts",
     "cron:sync": "tsx scripts/sync-cron.ts",
     "validate": "tsx scripts/validate-config.ts"

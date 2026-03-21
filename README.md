@@ -1,13 +1,28 @@
-# Crypto Aggregator
+# Crypto Aggregator → TA Desk
 
-A repo-managed crypto news and market-intelligence pipeline designed for OpenClaw cron.
+This repo is a repo-managed **BTC/ETH/SOL technical-analysis desk** with **catalyst awareness**, designed for OpenClaw cron.
 
-This setup does four things:
+The old product (broad crypto digest + TA as a side bundle) has been refactored into a **TA-first market intelligence system**.
 
-1. Collects **broad crypto**, **BTC**, **ETH**, and **SOL** news from RSS feeds.
-2. Collects **YouTube channel upload updates** without paying for the YouTube Data API by using channel feeds.
-3. Collects **X list** and **specific X analyst account** updates through OpenClaw browser-driven agent runs.
-4. Produces a clean daily brief input bundle for a GPT model to turn into the final digest.
+## What it does
+
+Three lanes:
+
+1) **Thesis lane (primary)**
+- Collect TA content (X analyst accounts/list + TA YouTube channels)
+- Extract structured theses (levels, bias, triggers, invalidations)
+- Maintain a persistent thesis ledger so we can report **changes** instead of re-summarizing
+
+2) **Catalyst lane (secondary)**
+- Track only market-moving catalysts (macro/regulatory/incidents/listings/unlocks/etc.)
+
+3) **Delta lane**
+- Diff since prior run: new theses, changed bias/levels/invalidation, newly stale setups
+
+## Outputs
+
+- **Morning Market Map** (primary): `out/morning-market-map-YYYY-MM-DD.md`
+- **Midday Delta** (optional, disabled by default): `out/midday-delta-YYYY-MM-DD.md`
 
 ## Why this repo exists
 
@@ -64,29 +79,40 @@ openclaw browser --browser-profile openclaw start
 
 Then manually sign into X inside that profile.
 
-## Daily flow
+## Daily flow (cron)
 
-### 1. Feed jobs
+### 1) Collect
 
-These jobs run deterministic scripts through agent-executed `exec` calls:
+- RSS fetch (secondary/tertiary; curated)
+- YouTube feed fetch (upload discovery)
+- YouTube transcript queue + browser transcript capture (TA-first depth)
+- X list + key X accounts via browser collector (primary)
 
-- `pnpm tsx scripts/fetch-rss.ts`
-- `pnpm tsx scripts/fetch-youtube-feeds.ts`
-- `pnpm tsx scripts/normalize.ts`
-- `pnpm tsx scripts/render-brief-input.ts`
+### 2) Normalize + structure
 
-### 2. X collection jobs
+- `scripts/normalize.ts` writes `out/normalized-YYYY-MM-DD.json`
+- `scripts/render-extraction-inputs.ts` writes:
+  - `out/thesis-extraction-input-YYYY-MM-DD.json`
+  - `out/catalyst-extraction-input-YYYY-MM-DD.json`
 
-These jobs instruct the OpenClaw agent to:
+### 3) Extract (LLM, structured JSON)
 
-- open the X list URL in the browser
-- capture fresh posts since the last checkpoint
-- write JSON files under `data/raw/YYYY-MM-DD/x/`
-- repeat for explicit analyst accounts like `@Morecryptoonl`
+- Thesis extraction → `out/theses-YYYY-MM-DD.json` (schema: `schemas/thesis.schema.json`)
+- Catalyst extraction → `out/catalysts-YYYY-MM-DD.json` (schema: `schemas/catalyst.schema.json`)
 
-### 3. Daily brief job
+### 4) Ledger + delta
 
-This job instructs the model to read `out/brief-input.md`, apply the workspace skill, and produce the final digest.
+- `scripts/update-thesis-ledger.ts` updates `state/thesis-ledger.json` and writes `out/delta-YYYY-MM-DD.json`
+
+### 5) Synthesis (Morning Market Map)
+
+- `scripts/render-market-map.ts` writes `out/market-map-input.json`
+- Final synthesis prompt writes `out/morning-market-map-YYYY-MM-DD.md`
+
+## Cost discipline
+
+- Plumbing jobs run on cheaper models (`41-mini` / `5-mini`).
+- Only the final Morning Market Map uses the strongest synthesis model (`gpt`).
 
 ## Managing jobs from git
 

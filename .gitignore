@@ -7,3 +7,15 @@ state/*.json
 out/*.md
 out/*.json
 data/raw/**/.DS_Store
+data/raw/
+# Keep example outputs committed; ignore runtime outputs.
+out/normalized-*.json
+out/thesis-extraction-input-*.json
+out/catalyst-extraction-input-*.json
+out/youtube-transcript-queue-*.json
+out/theses-*.json
+out/catalysts-*.json
+out/delta-*.json
+out/morning-market-map-*.md
+out/midday-delta-*.md
+out/market-map-input.json

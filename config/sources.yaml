@@ -9,6 +9,8 @@ x:
     - handle: Morecryptoonl
       url: "https://x.com/Morecryptoonl"
       category: ta
+      lane: thesis
+      weight: 1.0
       assets: [btc, eth, sol]
       enabled: true
 
@@ -18,37 +20,58 @@ youtube:
       handle: morecryptoonline
       url: "https://www.youtube.com/@morecryptoonline"
       category: ta
+      lane: thesis
+      weight: 1.0
       assets: [btc, eth, sol]
       enabled: true
       channelId: null
 
 rss:
   feeds:
-    - label: broad-crypto-1
-      category: news
-      assets: [crypto]
-      url: "https://www.theblock.co/rss.xml"
-      enabled: true
-    - label: broad-crypto-2
-      category: news
-      assets: [crypto]
-      url: "https://cointelegraph.com/rss"
-      enabled: true
-    - label: btc-news
-      category: news
-      assets: [btc]
+    # NOTE: RSS is now secondary/tertiary. Keep only high-signal catalyst / official-ish sources.
+
+    # High-signal-ish market structure / macro / regulatory coverage (still media, but often actionable)
+    - label: coindesk
+      category: catalyst
+      lane: catalyst
+      weight: 0.6
+      assets: [crypto, btc, eth, sol]
       url: "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml"
       enabled: true
-    - label: eth-news
+
+    # Ecosystem / protocol comms (mixed; keep low weight and treat as secondary)
+    - label: thedefiant
       category: news
+      lane: news
+      weight: 0.2
       assets: [eth]
       url: "https://www.thedefiant.io/feed"
       enabled: true
-    - label: sol-news
+
+    - label: solanafloor
       category: news
+      lane: news
+      weight: 0.2
       assets: [sol]
       url: "https://solanafloor.com/feed"
       enabled: true
+
+    # Broad media (tertiary; disabled by default to avoid newsletter drift)
+    - label: theblock
+      category: news
+      lane: news
+      weight: 0.1
+      assets: [crypto]
+      url: "https://www.theblock.co/rss.xml"
+      enabled: false
+
+    - label: cointelegraph
+      category: news
+      lane: news
+      weight: 0.05
+      assets: [crypto]
+      url: "https://cointelegraph.com/rss"
+      enabled: false
 
 topics:
   primary: [crypto, btc, eth, sol]
