@@ -118,6 +118,8 @@ Then manually sign into X inside that profile.
 
 - RSS is no longer the driver. It’s secondary/tertiary and curated in `config/sources.yaml`.
 - Very broad feeds (e.g. Cointelegraph) are disabled by default to prevent newsletter drift.
+- Disabled broken feeds:
+  - `solanafloor` — returning HTTP 404 as of 2026-03-21 (left in config but `enabled: false` until replaced)
 
 ## Known limitations
 

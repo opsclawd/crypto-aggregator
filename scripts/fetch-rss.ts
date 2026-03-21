@@ -12,29 +12,35 @@ const fetchedAt = new Date().toISOString();
 
 async function main(): Promise<void> {
   for (const feed of config.rss.feeds.filter((item) => item.enabled)) {
-    const parsed = await parser.parseURL(feed.url);
-    const freshItems: RssRawItem[] = [];
+    try {
+      const parsed = await parser.parseURL(feed.url);
+      const freshItems: RssRawItem[] = [];
 
-    for (const item of parsed.items) {
-      const link = item.link?.trim();
-      if (!link || newLinks.has(link)) continue;
-      newLinks.add(link);
-      freshItems.push({
-        type: 'rss',
-        feedLabel: feed.label,
-        sourceUrl: feed.url,
-        title: item.title?.trim() || '(untitled)',
-        link,
-        contentSnippet: item.contentSnippet?.trim() || null,
-        isoDate: item.isoDate || null,
-        category: feed.category,
-        assets: feed.assets,
-        fetchedAt
-      });
+      for (const item of parsed.items) {
+        const link = item.link?.trim();
+        if (!link || newLinks.has(link)) continue;
+        newLinks.add(link);
+        freshItems.push({
+          type: 'rss',
+          feedLabel: feed.label,
+          sourceUrl: feed.url,
+          title: item.title?.trim() || '(untitled)',
+          link,
+          contentSnippet: item.contentSnippet?.trim() || null,
+          isoDate: item.isoDate || null,
+          category: feed.category,
+          assets: feed.assets,
+          fetchedAt
+        });
+      }
+
+      writeTimestampedJson('rss', feed.label, freshItems);
+      console.log(`RSS ${feed.label}: ${freshItems.length} fresh items`);
+    } catch (error) {
+      console.error(`RSS ${feed.label}: fetch failed (${feed.url})`);
+      console.error(error);
+      // continue; do not crash the whole run
     }
-
-    writeTimestampedJson('rss', feed.label, freshItems);
-    console.log(`RSS ${feed.label}: ${freshItems.length} fresh items`);
   }
 
   writeSeenState({
