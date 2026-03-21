@@ -114,6 +114,17 @@ Then manually sign into X inside that profile.
 - Plumbing jobs run on cheaper models (`41-mini` / `5-mini`).
 - Only the final Morning Market Map uses the strongest synthesis model (`gpt`).
 
+## Feed audit / weighting notes
+
+- RSS is no longer the driver. It’s secondary/tertiary and curated in `config/sources.yaml`.
+- Very broad feeds (e.g. Cointelegraph) are disabled by default to prevent newsletter drift.
+
+## Known limitations
+
+- **YouTube depth:** transcript extraction is done via an OpenClaw browser job. Some videos may not expose transcripts; those items are explicitly marked (`youtube:transcript_unavailable`) and must be downweighted.
+- **Catalyst coverage:** without authenticated/paid feeds, some official sources block RSS (403). Keep catalysts curated and be explicit about gaps.
+- **Thesis identity:** thesis signatures are heuristic (source+asset+timeframe+setup+trigger/invalidation). If an analyst posts multiple similar setups, they may collide until we add richer identity logic.
+
 ## Managing jobs from git
 
 Edit `config/cron.yaml`, then run:
