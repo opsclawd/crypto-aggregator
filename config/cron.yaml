@@ -34,7 +34,7 @@ jobs:
 
   - key: youtube-ta-summarize
     name: YouTube TA summarize (Gemini)
-    cron: "0 6 * * *"
+    cron: "5 6 * * *"
     messageFile: prompts/jobs/youtube-ta-summarize.txt
     model: 41-mini
     thinking: low
