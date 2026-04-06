@@ -32,6 +32,14 @@ jobs:
     thinking: medium
     enabled: true
 
+  - key: youtube-ta-summarize
+    name: YouTube TA summarize (Gemini)
+    cron: "0 6 * * *"
+    messageFile: prompts/jobs/youtube-ta-summarize.txt
+    model: 41-mini
+    thinking: low
+    enabled: true
+
   - key: rss-fetch
     name: Catalyst + official RSS fetch
     cron: "0 6 * * *"

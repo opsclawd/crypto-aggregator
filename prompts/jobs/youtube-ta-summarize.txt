@@ -1,0 +1,1 @@
+In the current workspace repo, use exec to run `pnpm run summarize:youtube-ta`. Do not announce a narrative summary. If the command succeeds, stop.

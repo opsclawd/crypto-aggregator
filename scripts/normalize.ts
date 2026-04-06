@@ -7,10 +7,19 @@ import type { NormalizedItem, RssRawItem, XRawItem, YouTubeRawItem } from './lib
 type YouTubeTranscriptItem = {
   videoId: string;
   fetchedAt: string;
-  /** plain text transcript (no timestamps) */
   transcriptText: string;
   language?: string | null;
   method: 'browser' | 'api' | 'unknown';
+};
+
+type YouTubeSummaryItem = {
+  videoId: string;
+  title: string;
+  link: string;
+  published: string | null;
+  channelLabel: string;
+  assets: string[];
+  summary: string;
 };
 
 function listJsonFiles(dir: string): string[] {
@@ -52,10 +61,35 @@ function toNormalizedFromRss(item: RssRawItem): NormalizedItem {
   };
 }
 
-function toNormalizedFromYouTube(item: YouTubeRawItem, transcriptByVideoId: Map<string, YouTubeTranscriptItem>): NormalizedItem {
+function toNormalizedFromYouTube(
+  item: YouTubeRawItem,
+  transcriptByVideoId: Map<string, YouTubeTranscriptItem>,
+  summaryByVideoId: Map<string, YouTubeSummaryItem>
+): NormalizedItem {
   const lane = categoryToLane(item.category);
   const transcript = transcriptByVideoId.get(item.videoId);
+  const summary = summaryByVideoId.get(item.videoId);
   const hasTranscript = Boolean(transcript?.transcriptText?.trim());
+  const hasSummary = Boolean(summary?.summary?.trim() && !summary.summary.startsWith('Error'));
+
+  let text: string;
+  let confidence: NormalizedItem['confidence'];
+  let limitations: string[] | undefined;
+
+  if (hasSummary && summary) {
+    text = summary.summary;
+    confidence = 'high';
+    limitations = undefined;
+  } else if (hasTranscript) {
+    text = transcript!.transcriptText;
+    confidence = 'high';
+    limitations = undefined;
+  } else {
+    text = item.title;
+    confidence = lane === 'news' ? 'low' : 'medium';
+    limitations = ['youtube:no_summary_no_transcript'];
+  }
+
   return {
     id: hashId(['youtube', item.videoId]),
     lane,
@@ -63,14 +97,14 @@ function toNormalizedFromYouTube(item: YouTubeRawItem, transcriptByVideoId: Map<
     sourceKind: 'youtube',
     sourceLabel: item.channelLabel,
     title: item.title,
-    text: hasTranscript ? transcript!.transcriptText : item.title,
+    text,
     url: item.link,
     publishedAt: item.published || item.updated || null,
     collectedAt: item.fetchedAt,
     assets: item.assets,
     category: item.category,
-    confidence: hasTranscript ? 'high' : (lane === 'news' ? 'low' : 'medium'),
-    limitations: hasTranscript ? undefined : ['youtube:transcript_unavailable']
+    confidence,
+    limitations
   };
 }
 
@@ -113,8 +147,19 @@ function dedupe(items: NormalizedItem[]): NormalizedItem[] {
   return [...byId.values()].sort((a, b) => (a.publishedAt || a.collectedAt).localeCompare(b.publishedAt || b.collectedAt));
 }
 
+function findLatestDataDir(): string | null {
+  const rawDir = resolveFromRoot('data', 'raw');
+  if (!fs.existsSync(rawDir)) return null;
+  const dirs = fs.readdirSync(rawDir)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort()
+    .reverse();
+  return dirs[0] || null;
+}
+
 function main(): void {
-  const day = isoDay();
+  const day = findLatestDataDir() || isoDay();
+  console.log(`Using data from: ${day}`);
   const rssDir = resolveFromRoot('data', 'raw', day, 'rss');
   const youtubeDir = resolveFromRoot('data', 'raw', day, 'youtube');
   const youtubeTranscriptsDir = resolveFromRoot('data', 'raw', day, 'youtube-transcripts');
@@ -126,6 +171,16 @@ function main(): void {
     if (t?.videoId) transcriptByVideoId.set(t.videoId, t);
   }
 
+  const summaryByVideoId = new Map<string, YouTubeSummaryItem>();
+  const summaryFile = resolveFromRoot('out', `youtube-ta-summaries-${day}.json`);
+  if (fs.existsSync(summaryFile)) {
+    const summaryData = readJson<{ summaries: YouTubeSummaryItem[] }>(summaryFile, { summaries: [] });
+    for (const s of summaryData.summaries) {
+      if (s.videoId) summaryByVideoId.set(s.videoId, s);
+    }
+    console.log(`Loaded ${summaryByVideoId.size} YouTube summaries`);
+  }
+
   const normalized: NormalizedItem[] = [];
 
   for (const file of listJsonFiles(rssDir)) {
@@ -135,7 +190,7 @@ function main(): void {
 
   for (const file of listJsonFiles(youtubeDir)) {
     const payload = readJson<YouTubeRawItem[]>(file, []);
-    normalized.push(...payload.map((it) => toNormalizedFromYouTube(it, transcriptByVideoId)));
+    normalized.push(...payload.map((it) => toNormalizedFromYouTube(it, transcriptByVideoId, summaryByVideoId)));
   }
 
   for (const file of listJsonFiles(xDir)) {
