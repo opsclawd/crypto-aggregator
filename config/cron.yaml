@@ -13,13 +13,13 @@ defaults:
   announce: false
 
 jobs:
-  # ── Morning pipeline (12:00–6:00 AM) ───────────────────────────────────────
-  # Morning Market Map fires at 6:00 AM sharp. All jobs finish before that.
-  # Each has timeoutSeconds: 900 (15 min). ≥20 min gaps throughout.
+  # ── Morning pipeline (1:40–6:00 AM) ───────────────────────────────────────
+  # 14 enabled jobs, 20 min apart, Market Map fires at 6:00 AM sharp.
+  # Each has timeoutSeconds: 900 (15 min).
 
   - key: rss-fetch
     name: Catalyst + official RSS fetch
-    cron: "0 0 * * *"
+    cron: "40 1 * * *"
     messageFile: prompts/jobs/rss-fetch.txt
     model: 41-mini
     thinking: low
@@ -28,7 +28,7 @@ jobs:
 
   - key: youtube-feed-fetch
     name: YouTube feed fetch
-    cron: "5 0 * * *"
+    cron: "0 2 * * *"
     messageFile: prompts/jobs/youtube-feed-fetch.txt
     model: 41-mini
     thinking: low
@@ -37,7 +37,7 @@ jobs:
 
   - key: youtube-transcript-queue
     name: YouTube transcript queue
-    cron: "30 0 * * *"
+    cron: "20 2 * * *"
     messageFile: prompts/jobs/youtube-transcript-queue.txt
     model: 41-mini
     thinking: low
@@ -46,7 +46,7 @@ jobs:
 
   - key: youtube-transcript-collect
     name: YouTube transcript collect (browser)
-    cron: "0 1 * * *"
+    cron: "40 2 * * *"
     messageFile: prompts/jobs/youtube-transcript-collect.txt
     model: 5-mini
     thinking: medium
@@ -55,7 +55,7 @@ jobs:
 
   - key: x-list-collect
     name: X analyst list collect
-    cron: "20 1 * * *"
+    cron: "0 3 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
     model: 5-mini
     thinking: medium
@@ -64,7 +64,7 @@ jobs:
 
   - key: x-account-collect
     name: X key accounts collect
-    cron: "40 1 * * *"
+    cron: "20 3 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
     model: 5-mini
     thinking: medium
@@ -73,7 +73,7 @@ jobs:
 
   - key: normalize
     name: Normalize + enrich items
-    cron: "0 2 * * *"
+    cron: "40 3 * * *"
     messageFile: prompts/jobs/normalize.txt
     model: 41-mini
     thinking: low
@@ -82,7 +82,7 @@ jobs:
 
   - key: render-extraction-inputs
     name: Render extraction inputs (thesis/catalyst)
-    cron: "20 2 * * *"
+    cron: "0 4 * * *"
     messageFile: prompts/jobs/render-extraction-inputs.txt
     model: 41-mini
     thinking: low
@@ -91,7 +91,7 @@ jobs:
 
   - key: youtube-ta-summarize
     name: YouTube TA summarize (Gemini)
-    cron: "40 2 * * *"
+    cron: "20 4 * * *"
     messageFile: prompts/jobs/youtube-ta-summarize.txt
     model: 41-mini
     thinking: low
@@ -100,7 +100,7 @@ jobs:
 
   - key: extract-theses
     name: Extract TA theses (structured)
-    cron: "0 3 * * *"
+    cron: "40 4 * * *"
     messageFile: prompts/jobs/extract-theses.txt
     model: 5-mini
     thinking: medium
@@ -109,7 +109,7 @@ jobs:
 
   - key: extract-catalysts
     name: Extract catalysts (high-signal)
-    cron: "20 3 * * *"
+    cron: "0 5 * * *"
     messageFile: prompts/jobs/extract-catalysts.txt
     model: 5-mini
     thinking: medium
@@ -118,7 +118,7 @@ jobs:
 
   - key: update-thesis-ledger
     name: Update thesis ledger + delta
-    cron: "40 3 * * *"
+    cron: "20 5 * * *"
     messageFile: prompts/jobs/update-thesis-ledger.txt
     model: 41-mini
     thinking: low
@@ -127,7 +127,7 @@ jobs:
 
   - key: render-market-map-input
     name: Render Morning Market Map input bundle
-    cron: "0 4 * * *"
+    cron: "40 5 * * *"
     messageFile: prompts/jobs/render-market-map-input.txt
     model: 41-mini
     thinking: low
