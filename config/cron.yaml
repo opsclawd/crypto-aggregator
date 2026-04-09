@@ -13,8 +13,18 @@ defaults:
   announce: false
 
 jobs:
-  # ── Morning pipeline (5:45–8:05 AM) ────────────────────────────────────────
-  # All enabled jobs spaced ≥20 min apart. Each has timeoutSeconds: 900 (15 min).
+  # ── Morning pipeline (12:55–8:20 AM) ───────────────────────────────────────
+  # Morning Market Map target: 6:20 AM. All enabled jobs spaced ≥20 min apart.
+  # Each has timeoutSeconds: 900 (15 min).
+
+  - key: rss-fetch
+    name: Catalyst + official RSS fetch
+    cron: "0 5 * * *"
+    messageFile: prompts/jobs/rss-fetch.txt
+    model: 41-mini
+    thinking: low
+    timeoutSeconds: 900
+    enabled: true
 
   - key: youtube-feed-fetch
     name: YouTube feed fetch
@@ -40,15 +50,6 @@ jobs:
     messageFile: prompts/jobs/youtube-transcript-collect.txt
     model: 5-mini
     thinking: medium
-    timeoutSeconds: 900
-    enabled: true
-
-  - key: rss-fetch
-    name: Catalyst + official RSS fetch
-    cron: "0 5 * * *"
-    messageFile: prompts/jobs/rss-fetch.txt
-    model: 41-mini
-    thinking: low
     timeoutSeconds: 900
     enabled: true
 
@@ -135,7 +136,7 @@ jobs:
 
   - key: morning-market-map
     name: Morning Market Map (TA-first)
-    cron: "5 10 * * *"
+    cron: "20 10 * * *"
     messageFile: prompts/jobs/morning-market-map.txt
     model: gpt
     thinking: high
