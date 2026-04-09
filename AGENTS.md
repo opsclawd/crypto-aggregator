@@ -31,6 +31,14 @@ This repo powers a daily crypto intelligence pipeline. The agent must behave as 
 - Capture only new content since the last checkpoint when possible.
 - Record reposts distinctly instead of pretending they are original posts.
 
+## Cron jobs
+
+All cron definitions live in `config/cron.yaml` — **this is the source of truth**.
+
+Every enabled job **must** have `timeoutSeconds: 900` (15 min). Jobs that exceed 15 min are killed to prevent memory exhaustion from overlapping runs. Maintain at least 20 min gap between all enabled jobs in the schedule.
+
+After editing `cron.yaml`, apply changes to the live gateway with `cron.add` / `cron.update`.
+
 ## Brief rules
 
 Sections must always be:

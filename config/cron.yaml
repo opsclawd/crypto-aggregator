@@ -1,3 +1,10 @@
+# Cron definitions for crypto-aggregator.
+# Source of truth — edits here must be applied to the live gateway via `cron.add` / `cron.update`.
+#
+# IMPORTANT: Every enabled job MUST have timeoutSeconds: 900 (15 min).
+# Jobs that run longer than 15 min are killed to prevent memory exhaustion
+# from overlapping runs. Keep at least 20 min gap between all enabled jobs.
+
 defaults:
   tz: America/Edmonton
   session: isolated
@@ -6,7 +13,8 @@ defaults:
   announce: false
 
 jobs:
-  # One daily collector window → TA-first Morning Market Map
+  # ── Morning pipeline (5:45–8:05 AM) ────────────────────────────────────────
+  # All enabled jobs spaced ≥20 min apart. Each has timeoutSeconds: 900 (15 min).
 
   - key: youtube-feed-fetch
     name: YouTube feed fetch
@@ -14,116 +22,131 @@ jobs:
     messageFile: prompts/jobs/youtube-feed-fetch.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: youtube-transcript-queue
     name: YouTube transcript queue
-    cron: "50 5 * * *"
+    cron: "10 6 * * *"
     messageFile: prompts/jobs/youtube-transcript-queue.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: youtube-transcript-collect
     name: YouTube transcript collect (browser)
-    cron: "55 5 * * *"
+    cron: "35 6 * * *"
     messageFile: prompts/jobs/youtube-transcript-collect.txt
     model: 5-mini
     thinking: medium
-    enabled: true
-
-  - key: youtube-ta-summarize
-    name: YouTube TA summarize (Gemini)
-    cron: "5 6 * * *"
-    messageFile: prompts/jobs/youtube-ta-summarize.txt
-    model: 41-mini
-    thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: rss-fetch
     name: Catalyst + official RSS fetch
-    cron: "0 6 * * *"
+    cron: "0 5 * * *"
     messageFile: prompts/jobs/rss-fetch.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
+    enabled: true
+
+  - key: youtube-ta-summarize
+    name: YouTube TA summarize (Gemini)
+    cron: "55 6 * * *"
+    messageFile: prompts/jobs/youtube-ta-summarize.txt
+    model: 41-mini
+    thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: x-list-collect
     name: X analyst list collect
-    cron: "10 6 * * *"
+    cron: "20 7 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
     model: 5-mini
     thinking: medium
+    timeoutSeconds: 900
     enabled: true
 
   - key: x-account-collect
     name: X key accounts collect
-    cron: "20 6 * * *"
+    cron: "40 7 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
     model: 5-mini
     thinking: medium
+    timeoutSeconds: 900
     enabled: true
 
   - key: normalize
     name: Normalize + enrich items
-    cron: "30 6 * * *"
+    cron: "0 8 * * *"
     messageFile: prompts/jobs/normalize.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: render-extraction-inputs
     name: Render extraction inputs (thesis/catalyst)
-    cron: "35 6 * * *"
+    cron: "20 8 * * *"
     messageFile: prompts/jobs/render-extraction-inputs.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: extract-theses
     name: Extract TA theses (structured)
-    cron: "40 6 * * *"
+    cron: "40 8 * * *"
     messageFile: prompts/jobs/extract-theses.txt
     model: 5-mini
     thinking: medium
+    timeoutSeconds: 900
     enabled: true
 
   - key: extract-catalysts
     name: Extract catalysts (high-signal)
-    cron: "45 6 * * *"
+    cron: "0 9 * * *"
     messageFile: prompts/jobs/extract-catalysts.txt
     model: 5-mini
     thinking: medium
+    timeoutSeconds: 900
     enabled: true
 
   - key: update-thesis-ledger
     name: Update thesis ledger + delta
-    cron: "50 6 * * *"
+    cron: "20 9 * * *"
     messageFile: prompts/jobs/update-thesis-ledger.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: render-market-map-input
     name: Render Morning Market Map input bundle
-    cron: "55 6 * * *"
+    cron: "40 9 * * *"
     messageFile: prompts/jobs/render-market-map-input.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: true
 
   - key: morning-market-map
     name: Morning Market Map (TA-first)
-    cron: "5 7 * * *"
+    cron: "5 10 * * *"
     messageFile: prompts/jobs/morning-market-map.txt
     model: gpt
     thinking: high
+    timeoutSeconds: 900
     announce: true
     channel: "${OPENCLAW_CHANNEL}"
     to: "${OPENCLAW_TO}"
     enabled: true
 
-  # Optional midday delta. Disabled by default.
+  # ── Afternoon pipeline (1:00–2:40 PM) ───────────────────────────────────────
+  # Midday delta — material changes only
 
   - key: midday-delta
     name: Midday Delta (material changes only)
@@ -131,10 +154,11 @@ jobs:
     messageFile: prompts/jobs/midday-delta.txt
     model: 5-mini
     thinking: medium
-    announce: false
+    timeoutSeconds: 900
     enabled: false
 
-  # Optional second X pass (PM refresh). Disabled by default.
+  # ── Evening pipeline (6:00–7:40 PM) ─────────────────────────────────────────
+  # Second X pass (PM refresh)
 
   - key: x-list-collect-pm
     name: X analyst list collect (PM)
@@ -142,20 +166,23 @@ jobs:
     messageFile: prompts/jobs/x-list-collect.txt
     model: 5-mini
     thinking: medium
+    timeoutSeconds: 900
     enabled: false
 
   - key: x-account-collect-pm
     name: X key accounts collect (PM)
-    cron: "10 18 * * *"
+    cron: "20 18 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
     model: 5-mini
     thinking: medium
+    timeoutSeconds: 900
     enabled: false
 
   - key: normalize-pm
     name: Normalize + enrich items (PM)
-    cron: "20 18 * * *"
+    cron: "40 18 * * *"
     messageFile: prompts/jobs/normalize.txt
     model: 41-mini
     thinking: low
+    timeoutSeconds: 900
     enabled: false

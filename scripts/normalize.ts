@@ -144,7 +144,7 @@ function dedupe(items: NormalizedItem[]): NormalizedItem[] {
   for (const item of items) {
     if (!byId.has(item.id)) byId.set(item.id, item);
   }
-  return [...byId.values()].sort((a, b) => (a.publishedAt || a.collectedAt).localeCompare(b.publishedAt || b.collectedAt));
+  return [...byId.values()].sort((a, b) => (a.publishedAt || a.collectedAt || '').localeCompare(b.publishedAt || b.collectedAt || ''));
 }
 
 function findLatestDataDir(): string | null {
