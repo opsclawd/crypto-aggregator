@@ -13,7 +13,7 @@ defaults:
   announce: false
 
 jobs:
-  # ── Morning pipeline (12:55–8:20 AM) ───────────────────────────────────────
+  # ── Morning pipeline (5:00–10:20 AM) ───────────────────────────────────────
   # Morning Market Map target: 6:20 AM. All enabled jobs spaced ≥20 min apart.
   # Each has timeoutSeconds: 900 (15 min).
 
@@ -146,24 +146,24 @@ jobs:
     to: "${OPENCLAW_TO}"
     enabled: true
 
-  # ── Afternoon pipeline (1:00–2:40 PM) ───────────────────────────────────────
+  # ── Afternoon pipeline (9:00–10:40 AM) ───────────────────────────────────────
   # Midday delta — material changes only
 
   - key: midday-delta
     name: Midday Delta (material changes only)
-    cron: "0 13 * * *"
+    cron: "0 9 * * *"
     messageFile: prompts/jobs/midday-delta.txt
     model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: false
 
-  # ── Evening pipeline (6:00–7:40 PM) ─────────────────────────────────────────
+  # ── Evening pipeline (2:00–2:40 PM) ─────────────────────────────────────────
   # Second X pass (PM refresh)
 
   - key: x-list-collect-pm
     name: X analyst list collect (PM)
-    cron: "0 18 * * *"
+    cron: "0 14 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
     model: 5-mini
     thinking: medium
@@ -172,7 +172,7 @@ jobs:
 
   - key: x-account-collect-pm
     name: X key accounts collect (PM)
-    cron: "20 18 * * *"
+    cron: "20 14 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
     model: 5-mini
     thinking: medium
@@ -181,7 +181,7 @@ jobs:
 
   - key: normalize-pm
     name: Normalize + enrich items (PM)
-    cron: "40 18 * * *"
+    cron: "40 14 * * *"
     messageFile: prompts/jobs/normalize.txt
     model: 41-mini
     thinking: low
