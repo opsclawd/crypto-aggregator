@@ -13,13 +13,13 @@ defaults:
   announce: false
 
 jobs:
-  # ── Morning pipeline (5:00–10:20 AM) ───────────────────────────────────────
-  # Morning Market Map target: 6:20 AM. All enabled jobs spaced ≥20 min apart.
-  # Each has timeoutSeconds: 900 (15 min).
+  # ── Morning pipeline (12:00–6:00 AM) ───────────────────────────────────────
+  # Morning Market Map fires at 6:00 AM sharp. All jobs finish before that.
+  # Each has timeoutSeconds: 900 (15 min). ≥20 min gaps throughout.
 
   - key: rss-fetch
     name: Catalyst + official RSS fetch
-    cron: "0 5 * * *"
+    cron: "0 0 * * *"
     messageFile: prompts/jobs/rss-fetch.txt
     model: 41-mini
     thinking: low
@@ -28,7 +28,7 @@ jobs:
 
   - key: youtube-feed-fetch
     name: YouTube feed fetch
-    cron: "45 5 * * *"
+    cron: "5 0 * * *"
     messageFile: prompts/jobs/youtube-feed-fetch.txt
     model: 41-mini
     thinking: low
@@ -37,7 +37,7 @@ jobs:
 
   - key: youtube-transcript-queue
     name: YouTube transcript queue
-    cron: "10 6 * * *"
+    cron: "30 0 * * *"
     messageFile: prompts/jobs/youtube-transcript-queue.txt
     model: 41-mini
     thinking: low
@@ -46,25 +46,16 @@ jobs:
 
   - key: youtube-transcript-collect
     name: YouTube transcript collect (browser)
-    cron: "35 6 * * *"
+    cron: "0 1 * * *"
     messageFile: prompts/jobs/youtube-transcript-collect.txt
     model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: true
 
-  - key: youtube-ta-summarize
-    name: YouTube TA summarize (Gemini)
-    cron: "55 6 * * *"
-    messageFile: prompts/jobs/youtube-ta-summarize.txt
-    model: 41-mini
-    thinking: low
-    timeoutSeconds: 900
-    enabled: true
-
   - key: x-list-collect
     name: X analyst list collect
-    cron: "20 7 * * *"
+    cron: "20 1 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
     model: 5-mini
     thinking: medium
@@ -73,7 +64,7 @@ jobs:
 
   - key: x-account-collect
     name: X key accounts collect
-    cron: "40 7 * * *"
+    cron: "40 1 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
     model: 5-mini
     thinking: medium
@@ -82,7 +73,7 @@ jobs:
 
   - key: normalize
     name: Normalize + enrich items
-    cron: "0 8 * * *"
+    cron: "0 2 * * *"
     messageFile: prompts/jobs/normalize.txt
     model: 41-mini
     thinking: low
@@ -91,8 +82,17 @@ jobs:
 
   - key: render-extraction-inputs
     name: Render extraction inputs (thesis/catalyst)
-    cron: "20 8 * * *"
+    cron: "20 2 * * *"
     messageFile: prompts/jobs/render-extraction-inputs.txt
+    model: 41-mini
+    thinking: low
+    timeoutSeconds: 900
+    enabled: true
+
+  - key: youtube-ta-summarize
+    name: YouTube TA summarize (Gemini)
+    cron: "40 2 * * *"
+    messageFile: prompts/jobs/youtube-ta-summarize.txt
     model: 41-mini
     thinking: low
     timeoutSeconds: 900
@@ -100,7 +100,7 @@ jobs:
 
   - key: extract-theses
     name: Extract TA theses (structured)
-    cron: "40 8 * * *"
+    cron: "0 3 * * *"
     messageFile: prompts/jobs/extract-theses.txt
     model: 5-mini
     thinking: medium
@@ -109,7 +109,7 @@ jobs:
 
   - key: extract-catalysts
     name: Extract catalysts (high-signal)
-    cron: "0 9 * * *"
+    cron: "20 3 * * *"
     messageFile: prompts/jobs/extract-catalysts.txt
     model: 5-mini
     thinking: medium
@@ -118,7 +118,7 @@ jobs:
 
   - key: update-thesis-ledger
     name: Update thesis ledger + delta
-    cron: "20 9 * * *"
+    cron: "40 3 * * *"
     messageFile: prompts/jobs/update-thesis-ledger.txt
     model: 41-mini
     thinking: low
@@ -127,7 +127,7 @@ jobs:
 
   - key: render-market-map-input
     name: Render Morning Market Map input bundle
-    cron: "40 9 * * *"
+    cron: "0 4 * * *"
     messageFile: prompts/jobs/render-market-map-input.txt
     model: 41-mini
     thinking: low
@@ -136,7 +136,7 @@ jobs:
 
   - key: morning-market-map
     name: Morning Market Map (TA-first)
-    cron: "20 10 * * *"
+    cron: "0 6 * * *"
     messageFile: prompts/jobs/morning-market-map.txt
     model: gpt
     thinking: high
@@ -146,7 +146,7 @@ jobs:
     to: "${OPENCLAW_TO}"
     enabled: true
 
-  # ── Afternoon pipeline (9:00–10:40 AM) ───────────────────────────────────────
+  # ── Afternoon pipeline (9:00–10:40 AM) ─────────────────────────────────────
   # Midday delta — material changes only
 
   - key: midday-delta
