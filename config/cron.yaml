@@ -77,15 +77,16 @@ jobs:
 
   - key: render-extraction-inputs
     name: Render extraction inputs (thesis/catalyst)
-    cron: "0 4 * * *"
+    cron: "40 4 * * *"
     messageFile: prompts/jobs/render-extraction-inputs.txt
     thinking: low
     timeoutSeconds: 900
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   - key: youtube-ta-summarize
     name: YouTube TA summarize (Gemini)
-    cron: "20 4 * * *"
+    cron: "0 5 * * *"
     messageFile: prompts/jobs/youtube-ta-summarize.txt
     thinking: low
     timeoutSeconds: 900
@@ -94,7 +95,7 @@ jobs:
 
   - key: extract-theses
     name: Extract TA theses (structured)
-    cron: "40 4 * * *"
+    cron: "20 5 * * *"
     messageFile: prompts/jobs/extract-theses.txt
     thinking: medium
     timeoutSeconds: 900
@@ -103,7 +104,7 @@ jobs:
 
   - key: extract-catalysts
     name: Extract catalysts (high-signal)
-    cron: "0 5 * * *"
+    cron: "40 5 * * *"
     messageFile: prompts/jobs/extract-catalysts.txt
     thinking: medium
     timeoutSeconds: 900
@@ -112,7 +113,7 @@ jobs:
 
   - key: update-thesis-ledger
     name: Update thesis ledger + delta
-    cron: "20 5 * * *"
+    cron: "0 6 * * *"
     messageFile: prompts/jobs/update-thesis-ledger.txt
     thinking: low
     timeoutSeconds: 900
@@ -121,7 +122,7 @@ jobs:
 
   - key: render-market-map-input
     name: Render Morning Market Map input bundle
-    cron: "40 5 * * *"
+    cron: "20 6 * * *"
     messageFile: prompts/jobs/render-market-map-input.txt
     thinking: low
     timeoutSeconds: 900
@@ -130,7 +131,7 @@ jobs:
 
   - key: morning-market-map
     name: Morning Market Map (TA-first)
-    cron: "0 6 * * *"
+    cron: "40 6 * * *"
     messageFile: prompts/jobs/morning-market-map.txt
     thinking: high
     timeoutSeconds: 900
