@@ -1,1 +1,5 @@
-In the current workspace repo, use exec to run `pnpm tsx scripts/fetch-rss.ts`. Do not announce a narrative summary. If the command succeeds, stop.
+In the current workspace repo, use exec to run:
+
+cd ~/.openclaw/workspace/crypto-aggregator && pnpm tsx scripts/fetch-rss.ts
+
+Do not announce a narrative summary. If the command succeeds, stop.

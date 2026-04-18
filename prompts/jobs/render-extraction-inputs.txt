@@ -1,7 +1,7 @@
 In the current workspace repo:
 
 Run:
-pnpm tsx scripts/render-extraction-inputs.ts
+cd ~/.openclaw/workspace/crypto-aggregator && pnpm tsx scripts/render-extraction-inputs.ts
 
 Do not browse.
 Do not summarize.
