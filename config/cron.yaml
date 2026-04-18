@@ -11,6 +11,8 @@ defaults:
   agent: default
   exact: true
   announce: false
+  model: minimax/MiniMax-M2.7
+  modelFallback: ollama-cloud/glm-5.1:cloud
 
 jobs:
   # ── Morning pipeline (1:40–6:00 AM) ───────────────────────────────────────
@@ -21,7 +23,6 @@ jobs:
     name: Catalyst + official RSS fetch
     cron: "40 1 * * *"
     messageFile: prompts/jobs/rss-fetch.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -30,7 +31,6 @@ jobs:
     name: YouTube feed fetch
     cron: "0 2 * * *"
     messageFile: prompts/jobs/youtube-feed-fetch.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -39,7 +39,6 @@ jobs:
     name: YouTube transcript queue
     cron: "20 2 * * *"
     messageFile: prompts/jobs/youtube-transcript-queue.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -48,7 +47,6 @@ jobs:
     name: YouTube transcript collect (browser)
     cron: "40 2 * * *"
     messageFile: prompts/jobs/youtube-transcript-collect.txt
-    model: minimax/MiniMax-M2.7
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -57,7 +55,6 @@ jobs:
     name: X analyst list collect
     cron: "0 3 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
-    model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -66,7 +63,6 @@ jobs:
     name: X key accounts collect
     cron: "20 3 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
-    model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -75,7 +71,6 @@ jobs:
     name: Normalize + enrich items
     cron: "40 3 * * *"
     messageFile: prompts/jobs/normalize.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -84,7 +79,6 @@ jobs:
     name: Render extraction inputs (thesis/catalyst)
     cron: "0 4 * * *"
     messageFile: prompts/jobs/render-extraction-inputs.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -93,7 +87,6 @@ jobs:
     name: YouTube TA summarize (Gemini)
     cron: "20 4 * * *"
     messageFile: prompts/jobs/youtube-ta-summarize.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -102,7 +95,6 @@ jobs:
     name: Extract TA theses (structured)
     cron: "40 4 * * *"
     messageFile: prompts/jobs/extract-theses.txt
-    model: minimax/MiniMax-M2.7
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -111,7 +103,6 @@ jobs:
     name: Extract catalysts (high-signal)
     cron: "0 5 * * *"
     messageFile: prompts/jobs/extract-catalysts.txt
-    model: minimax/MiniMax-M2.7
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -120,7 +111,6 @@ jobs:
     name: Update thesis ledger + delta
     cron: "20 5 * * *"
     messageFile: prompts/jobs/update-thesis-ledger.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -129,7 +119,6 @@ jobs:
     name: Render Morning Market Map input bundle
     cron: "40 5 * * *"
     messageFile: prompts/jobs/render-market-map-input.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: true
@@ -138,7 +127,6 @@ jobs:
     name: Morning Market Map (TA-first)
     cron: "0 6 * * *"
     messageFile: prompts/jobs/morning-market-map.txt
-    model: gpt
     thinking: high
     timeoutSeconds: 900
     announce: true
@@ -153,7 +141,6 @@ jobs:
     name: Midday Delta (material changes only)
     cron: "0 9 * * *"
     messageFile: prompts/jobs/midday-delta.txt
-    model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: false
@@ -165,7 +152,6 @@ jobs:
     name: X analyst list collect (PM)
     cron: "0 14 * * *"
     messageFile: prompts/jobs/x-list-collect.txt
-    model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: false
@@ -174,7 +160,6 @@ jobs:
     name: X key accounts collect (PM)
     cron: "20 14 * * *"
     messageFile: prompts/jobs/x-account-collect.txt
-    model: 5-mini
     thinking: medium
     timeoutSeconds: 900
     enabled: false
@@ -183,7 +168,6 @@ jobs:
     name: Normalize + enrich items (PM)
     cron: "40 14 * * *"
     messageFile: prompts/jobs/normalize.txt
-    model: 41-mini
     thinking: low
     timeoutSeconds: 900
     enabled: false
