@@ -90,6 +90,7 @@ jobs:
     thinking: low
     timeoutSeconds: 900
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   - key: extract-theses
     name: Extract TA theses (structured)
@@ -98,6 +99,7 @@ jobs:
     thinking: medium
     timeoutSeconds: 900
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   - key: extract-catalysts
     name: Extract catalysts (high-signal)
@@ -106,6 +108,7 @@ jobs:
     thinking: medium
     timeoutSeconds: 900
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   - key: update-thesis-ledger
     name: Update thesis ledger + delta
@@ -114,6 +117,7 @@ jobs:
     thinking: low
     timeoutSeconds: 900
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   - key: render-market-map-input
     name: Render Morning Market Map input bundle
@@ -122,6 +126,7 @@ jobs:
     thinking: low
     timeoutSeconds: 900
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   - key: morning-market-map
     name: Morning Market Map (TA-first)
@@ -133,6 +138,7 @@ jobs:
     channel: "${OPENCLAW_CHANNEL}"
     to: "${OPENCLAW_TO}"
     enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
 
   # ── Afternoon pipeline (9:00–10:40 AM) ─────────────────────────────────────
   # Midday delta — material changes only

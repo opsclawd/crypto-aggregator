@@ -9,3 +9,6 @@ Follow `prompts/catalyst-extractor.md`.
 Use fs/apply_patch to write the file.
 Do not browse.
 Do not summarize.
+
+IMPORTANT: Run from the crypto-aggregator directory first:
+cd ~/.openclaw/workspace/crypto-aggregator

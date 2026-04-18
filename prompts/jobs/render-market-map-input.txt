@@ -1,7 +1,7 @@
 In the current workspace repo:
 
 Run:
-pnpm tsx scripts/render-market-map.ts
+cd ~/.openclaw/workspace/crypto-aggregator && pnpm tsx scripts/render-market-map.ts
 
 Do not browse.
 Do not summarize.

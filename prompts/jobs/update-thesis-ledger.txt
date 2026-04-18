@@ -1,7 +1,7 @@
 In the current workspace repo:
 
 Run:
-pnpm tsx scripts/update-thesis-ledger.ts
+cd ~/.openclaw/workspace/crypto-aggregator && pnpm tsx scripts/update-thesis-ledger.ts
 
 Do not browse.
 Do not summarize.

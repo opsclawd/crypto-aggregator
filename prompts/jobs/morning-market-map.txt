@@ -6,3 +6,6 @@ Write the final report to:
 - out/morning-market-map-YYYY-MM-DD.md
 
 If you are configured to announce, announce ONLY the report content.
+
+IMPORTANT: Run from the crypto-aggregator directory first:
+cd ~/.openclaw/workspace/crypto-aggregator
