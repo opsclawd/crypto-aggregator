@@ -48,7 +48,7 @@ jobs:
     name: YouTube transcript collect (browser)
     cron: "40 2 * * *"
     messageFile: prompts/jobs/youtube-transcript-collect.txt
-    model: 5-mini
+    model: minimax/MiniMax-M2.7
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -102,7 +102,7 @@ jobs:
     name: Extract TA theses (structured)
     cron: "40 4 * * *"
     messageFile: prompts/jobs/extract-theses.txt
-    model: 5-mini
+    model: minimax/MiniMax-M2.7
     thinking: medium
     timeoutSeconds: 900
     enabled: true
@@ -111,7 +111,7 @@ jobs:
     name: Extract catalysts (high-signal)
     cron: "0 5 * * *"
     messageFile: prompts/jobs/extract-catalysts.txt
-    model: 5-mini
+    model: minimax/MiniMax-M2.7
     thinking: medium
     timeoutSeconds: 900
     enabled: true
