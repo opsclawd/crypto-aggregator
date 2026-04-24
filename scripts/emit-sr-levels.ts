@@ -71,13 +71,14 @@ interface SrLevelBriefRequest {
   brief: {
     briefId: string;
     sourceRecordedAtIso?: string;
+    summary?: string;
   };
   levels: LevelRow[];
 }
 
 const BACKOFF_DELAYS = [500, 1000, 2000];
 const MAX_RETRIES = 3;
-const MAX_NOTES_LENGTH = 200;
+const MAX_SUMMARY_LENGTH = 500;
 
 export function parsePriceString(value: string): number | null {
   let s = value.trim();
@@ -169,7 +170,11 @@ const RANK_MAP: Record<string, string> = {
   low: 'minor'
 };
 
-export function buildNotes(thesis: Thesis): string {
+export function buildNotes(
+  thesis: Thesis,
+  rawLevelString: string,
+  levelType: 'support' | 'resistance'
+): string {
   const parts: string[] = [
     `${thesis.sourceHandle} ${thesis.timeframe}, ${thesis.bias}. ${thesis.setupType}`
   ];
@@ -183,22 +188,25 @@ export function buildNotes(thesis: Thesis): string {
   ) {
     parts.push(`Invalidation: ${thesis.invalidation}`);
   }
-
-  let result = parts[0];
-  for (let i = 1; i < parts.length; i++) {
-    const candidate = `${result} | ${parts[i]}`;
-    if (candidate.length <= MAX_NOTES_LENGTH) {
-      result = candidate;
-    } else {
-      break;
-    }
+  if (
+    typeof thesis.entryZone === 'string' &&
+    thesis.entryZone.length > 0
+  ) {
+    parts.push(`Entry zone: ${thesis.entryZone}`);
   }
 
-  if (result.length > MAX_NOTES_LENGTH) {
-    result = result.slice(0, MAX_NOTES_LENGTH - 3) + '...';
+  parts.push(
+    `${levelType === 'support' ? 'Support' : 'Resistance'} parsed from: "${rawLevelString}"`
+  );
+
+  if (thesis.supportLevels.length > 0) {
+    parts.push(`Raw support: ${thesis.supportLevels.join(', ')}`);
+  }
+  if (thesis.resistanceLevels.length > 0) {
+    parts.push(`Raw resistance: ${thesis.resistanceLevels.join(', ')}`);
   }
 
-  return result;
+  return parts.join(' | ');
 }
 
 export function projectThesesToRequests(
@@ -250,7 +258,7 @@ export function projectThesesToRequests(
           price,
           timeframe: thesis.timeframe,
           rank,
-          notes: buildNotes(thesis)
+          notes: buildNotes(thesis, raw, 'support')
         });
       }
 
@@ -268,7 +276,7 @@ export function projectThesesToRequests(
           price,
           timeframe: thesis.timeframe,
           rank,
-          notes: buildNotes(thesis)
+          notes: buildNotes(thesis, raw, 'resistance')
         });
       }
 
@@ -288,13 +296,16 @@ export function projectThesesToRequests(
     }
 
     const briefId = `${source}-sol-${date}`;
+    const rawTexts = group.map((t) => t.rawThesisText).filter(Boolean);
+    const summary = rawTexts.join(' ').slice(0, MAX_SUMMARY_LENGTH);
     requests.push({
       schemaVersion: '1.0',
       source,
       symbol: 'SOL/USDC',
       brief: {
         briefId,
-        ...(latestIso ? { sourceRecordedAtIso: latestIso } : {})
+        ...(latestIso ? { sourceRecordedAtIso: latestIso } : {}),
+        summary
       },
       levels
     });
