@@ -66,4 +66,4 @@ For each message, output ONLY the content prefixed with:
 `[SOL]\n\n` — for SOL section
 `[Summary]\n\n` — for the final summary message
 
-Do NOT combine messages. Output message 1 (BTC) first, wait, then message 2 (ETH), and so on.
+Do NOT combine messages. Output message 1 (BTC) first, then message 2 (ETH), and so on.
