@@ -19,7 +19,11 @@
     "brief:input": "tsx scripts/render-brief-input.ts",
     "cron:sync": "tsx scripts/sync-cron.ts",
     "validate": "tsx scripts/validate-config.ts",
-    "summarize:youtube-ta": "tsx scripts/summarize-youtube-ta.ts"
+    "summarize:youtube-ta": "tsx scripts/summarize-youtube-ta.ts",
+    "emit:sr-levels": "tsx scripts/emit-sr-levels.ts",
+    "emit:sr-levels:dry": "EMIT_SR_LEVELS_DRY_RUN=true tsx scripts/emit-sr-levels.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "dotenv": "^17.4.1",
@@ -30,6 +34,7 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.5"
   }
 }

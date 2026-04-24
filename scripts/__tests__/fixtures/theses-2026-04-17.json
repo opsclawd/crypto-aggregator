@@ -1,0 +1,24 @@
+[
+  {
+    "asset": "sol",
+    "timeframe": "swing",
+    "bias": "bullish",
+    "setupType": "trend continuation",
+    "supportLevels": ["$78.1\u2013$81.75 (wave two support)", "$76.80 (swing low invalidation)"],
+    "resistanceLevels": ["$85.90\u2013$88.95 (near-term)", "$96 area (March highs)"],
+    "entryZone": null,
+    "targets": ["$110\u2013$138"],
+    "invalidation": "break below $76.80 swing low from April",
+    "trigger": "Decisive break above intraday high for direct breakout signal",
+    "chartReference": null,
+    "sourceHandle": "morecryptoonline",
+    "sourceChannel": "morecryptoonline",
+    "sourceKind": "youtube",
+    "sourceReliability": "high",
+    "rawThesisText": "Solana has a continuation setup.",
+    "collectedAt": "2026-04-17T08:00:00.000Z",
+    "publishedAt": "2026-04-17T10:00:00.000Z",
+    "sourceUrl": null,
+    "notes": null
+  }
+]
