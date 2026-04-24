@@ -1,0 +1,7 @@
+In the current workspace repo:
+
+Run:
+  cd ~/.openclaw/workspace/crypto-aggregator && pnpm emit:sr-levels
+
+Do not browse.
+Do not summarize.

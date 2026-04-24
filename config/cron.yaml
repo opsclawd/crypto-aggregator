@@ -15,8 +15,8 @@ defaults:
   modelFallback: ollama-cloud/glm-5.1:cloud
 
 jobs:
-  # ── Morning pipeline (1:40–6:00 AM) ───────────────────────────────────────
-  # 14 enabled jobs, 20 min apart, Market Map fires at 6:00 AM sharp.
+  # ── Morning pipeline (1:40–7:00 AM) ───────────────────────────────────────
+  # 15 enabled jobs, 20 min apart, Market Map fires at 7:00 AM sharp.
   # Each has timeoutSeconds: 900 (15 min).
 
   - key: rss-fetch
@@ -123,9 +123,18 @@ jobs:
     enabled: true
     cwd: "~/.openclaw/workspace/crypto-aggregator"
 
+  - key: emit-sr-levels
+    name: Emit S/R levels to regime-engine
+    cron: "20 6 * * *"
+    messageFile: prompts/jobs/emit-sr-levels.txt
+    thinking: low
+    timeoutSeconds: 900
+    enabled: true
+    cwd: "~/.openclaw/workspace/crypto-aggregator"
+
   - key: render-market-map-input
     name: Render Morning Market Map input bundle
-    cron: "20 6 * * *"
+    cron: "40 6 * * *"
     messageFile: prompts/jobs/render-market-map-input.txt
     thinking: low
     timeoutSeconds: 900
@@ -134,7 +143,7 @@ jobs:
 
   - key: morning-market-map
     name: Morning Market Map (TA-first)
-    cron: "40 6 * * *"
+    cron: "0 7 * * *"
     messageFile: prompts/jobs/morning-market-map.txt
     thinking: high
     timeoutSeconds: 900

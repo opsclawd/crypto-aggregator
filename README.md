@@ -104,6 +104,10 @@ Then manually sign into X inside that profile.
 
 - `scripts/update-thesis-ledger.ts` updates `state/thesis-ledger.json` and writes `out/delta-YYYY-MM-DD.json`
 
+### 4.5) Emit S/R levels to regime-engine
+
+- `scripts/emit-sr-levels.ts` projects SOL theses to the regime-engine ingest contract and POSTs
+
 ### 5) Synthesis (Morning Market Map)
 
 - `scripts/render-market-map.ts` writes `out/market-map-input.json`
@@ -120,6 +124,24 @@ Then manually sign into X inside that profile.
 - Very broad feeds (e.g. Cointelegraph) are disabled by default to prevent newsletter drift.
 - Disabled broken feeds:
   - `solanafloor` — returning HTTP 404 as of 2026-03-21 (left in config but `enabled: false` until replaced)
+
+## Regime-engine integration
+
+The `emit-sr-levels` script reads the day's SOL theses, projects their support/resistance levels into the regime-engine ingest contract, and POSTs them to the regime-engine `POST /v1/sr-levels` endpoint. This feeds the CLMM autopilot's S/R level read path.
+
+**Required environment variables:**
+- `REGIME_ENGINE_URL` — base URL of the deployed regime-engine service
+- `REGIME_ENGINE_INGEST_TOKEN` — shared secret for the ingest endpoint (set in the OpenClaw secret store, not in `.env`)
+
+**Dry-run for verification:**
+```bash
+pnpm emit:sr-levels:dry
+```
+
+**Manual re-run after a failure:**
+```bash
+pnpm emit:sr-levels
+```
 
 ## Known limitations
 
