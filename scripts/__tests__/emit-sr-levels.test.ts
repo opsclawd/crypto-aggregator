@@ -104,6 +104,11 @@ describe('parsePriceString', () => {
     expect(parsePriceString('$96 area (March highs)')).toBe(96);
   });
 
+  it('strips multiple trailing labels', () => {
+    expect(parsePriceString('$120 support zone')).toBe(120);
+    expect(parsePriceString('$78 to $82 main resistance zone')).toBe(80);
+  });
+
   it('parses approximate prefix', () => {
     expect(parsePriceString('~128')).toBe(128);
   });
@@ -126,6 +131,10 @@ describe('canonicalizeSource', () => {
 
   it('maps Morecryptoonl to mco (case variant)', () => {
     expect(canonicalizeSource('Morecryptoonl')).toBe('mco');
+  });
+
+  it('maps @Morecryptoonl to mco (strips leading @)', () => {
+    expect(canonicalizeSource('@Morecryptoonl')).toBe('mco');
   });
 
   it('normalizes unknown handle to alphanumeric slug', () => {
@@ -279,6 +288,24 @@ describe('projectThesesToRequests', () => {
     const requests = projectThesesToRequests(theses, date);
     expect(requests[0]!.brief.sourceRecordedAtIso).toBe(
       '2026-04-17T14:00:00.000Z'
+    );
+  });
+
+  it('normalizes mixed-offset timestamps to UTC ISO for sourceRecordedAtIso', () => {
+    const theses = [
+      makeThesis({
+        publishedAt: '2026-04-24T09:00:00-04:00',
+        collectedAt: '2026-04-24T08:00:00.000Z'
+      }),
+      makeThesis({
+        publishedAt: '2026-04-24T12:00:00Z',
+        collectedAt: '2026-04-24T11:00:00.000Z'
+      })
+    ];
+    const requests = projectThesesToRequests(theses, date);
+    // 09:00:00-04:00 = 13:00:00Z, which is later than 12:00:00Z
+    expect(requests[0]!.brief.sourceRecordedAtIso).toBe(
+      '2026-04-24T13:00:00.000Z'
     );
   });
 

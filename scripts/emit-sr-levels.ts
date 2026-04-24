@@ -86,7 +86,9 @@ export function parsePriceString(value: string): number | null {
   s = s.replace(/\([^)]*\)/g, '');
   s = s.trim();
 
-  s = s.replace(TRAILING_LABELS, '').trim();
+  while (TRAILING_LABELS.test(s)) {
+    s = s.replace(TRAILING_LABELS, '').trim();
+  }
 
   s = s.replace(/^~\s*/, '');
 
@@ -157,6 +159,7 @@ export function canonicalizeSource(sourceHandle: string): string | null {
   if (SOURCE_ALIASES[lower]) return SOURCE_ALIASES[lower];
 
   const slug = lower.replace(/[^a-z0-9]/g, '');
+  if (SOURCE_ALIASES[slug]) return SOURCE_ALIASES[slug];
   return slug.length > 0 ? slug : null;
 }
 
@@ -271,8 +274,10 @@ export function projectThesesToRequests(
 
       const thesisIso = thesis.publishedAt ?? thesis.collectedAt;
       if (thesisIso) {
-        if (!latestIso || thesisIso > latestIso) {
-          latestIso = thesisIso;
+        const thesisMs = Date.parse(thesisIso);
+        const latestMs = latestIso ? Date.parse(latestIso) : -Infinity;
+        if (!Number.isNaN(thesisMs) && thesisMs > latestMs) {
+          latestIso = new Date(thesisMs).toISOString();
         }
       }
     }
