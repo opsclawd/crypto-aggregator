@@ -149,13 +149,14 @@ describe('canonicalizeSource', () => {
 });
 
 describe('buildNotes', () => {
-  it('builds basic notes string', () => {
+  it('builds basic notes string with parsed-from', () => {
     const thesis = makeThesis();
-    const notes = buildNotes(thesis);
+    const notes = buildNotes(thesis, '$128', 'support');
     expect(notes).toContain('morecryptoonline');
     expect(notes).toContain('swing');
     expect(notes).toContain('bullish');
     expect(notes).toContain('trend continuation');
+    expect(notes).toContain('Support parsed from: "$128"');
   });
 
   it('includes trigger and invalidation', () => {
@@ -163,28 +164,43 @@ describe('buildNotes', () => {
       trigger: 'break above resistance',
       invalidation: 'close below $120'
     });
-    const notes = buildNotes(thesis);
+    const notes = buildNotes(thesis, '$128', 'support');
     expect(notes).toContain('Trigger: break above resistance');
     expect(notes).toContain('Invalidation: close below $120');
   });
 
-  it('truncates to 200 characters', () => {
-    const thesis = makeThesis({
-      trigger: 'x'.repeat(300),
-      invalidation: 'y'.repeat(300)
-    });
-    const notes = buildNotes(thesis);
-    expect(notes.length).toBeLessThanOrEqual(200);
-    if (notes.endsWith('...')) {
-      expect(notes.length).toBe(200);
-    }
+  it('includes entryZone when present', () => {
+    const thesis = makeThesis({ entryZone: '$125-$130' });
+    const notes = buildNotes(thesis, '$128', 'support');
+    expect(notes).toContain('Entry zone: $125-$130');
   });
 
-  it('omits trigger/invalidation sections when fields are null', () => {
-    const thesis = makeThesis({ trigger: null, invalidation: null });
-    const notes = buildNotes(thesis);
+  it('includes raw support and resistance levels', () => {
+    const thesis = makeThesis({
+      supportLevels: ['$128', '$120'],
+      resistanceLevels: ['$178\u2013$182']
+    });
+    const notes = buildNotes(thesis, '$128', 'support');
+    expect(notes).toContain('Raw support: $128, $120');
+    expect(notes).toContain('Raw resistance: $178\u2013$182');
+  });
+
+  it('omits trigger/invalidation/entryZone when fields are null', () => {
+    const thesis = makeThesis({
+      trigger: null,
+      invalidation: null,
+      entryZone: null
+    });
+    const notes = buildNotes(thesis, '$128', 'support');
     expect(notes).not.toContain('Trigger:');
     expect(notes).not.toContain('Invalidation:');
+    expect(notes).not.toContain('Entry zone:');
+  });
+
+  it('uses resistance label for resistance levels', () => {
+    const thesis = makeThesis();
+    const notes = buildNotes(thesis, '$178', 'resistance');
+    expect(notes).toContain('Resistance parsed from: "$178"');
   });
 });
 
@@ -272,6 +288,34 @@ describe('projectThesesToRequests', () => {
       (l) => l.levelType === 'support' && l.price === 128
     );
     expect(support128).toHaveLength(1);
+  });
+
+  it('includes brief.summary from rawThesisText', () => {
+    const theses = [
+      makeThesis({ rawThesisText: 'SOL is trending up with key support at 128.' })
+    ];
+    const requests = projectThesesToRequests(theses, date);
+    expect(requests[0]!.brief.summary).toContain(
+      'SOL is trending up with key support at 128.'
+    );
+  });
+
+  it('includes brief.summary concatenated from multiple theses', () => {
+    const theses = [
+      makeThesis({ rawThesisText: 'Thesis one.' }),
+      makeThesis({ rawThesisText: 'Thesis two.' })
+    ];
+    const requests = projectThesesToRequests(theses, date);
+    expect(requests[0]!.brief.summary).toContain('Thesis one.');
+    expect(requests[0]!.brief.summary).toContain('Thesis two.');
+  });
+
+  it('truncates brief.summary to 500 characters', () => {
+    const theses = [
+      makeThesis({ rawThesisText: 'x'.repeat(600) })
+    ];
+    const requests = projectThesesToRequests(theses, date);
+    expect(requests[0]!.brief.summary!.length).toBeLessThanOrEqual(500);
   });
 
   it('uses latest publishedAt ?? collectedAt for sourceRecordedAtIso', () => {
