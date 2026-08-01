@@ -31,7 +31,10 @@ const SOURCE_ALIASES: Record<string, string> = {
 };
 
 const TRAILING_LABELS =
-  /\s+(area|zone|target|support|resistance|initial|next|main|key|minor|major|near[- ]term|current|strong|weak|critical)\s*$/i;
+  /\s+(area|zone|target|support|resistance|initial|next|main|key|minor|major|near[- ]term|current|strong|weak|critical|micro|macro|range|swing|breakout|confirmation|signal|rejection|bounce|drop|rise|high|low)\s*$/i;
+
+const TRAILING_PHRASES =
+  /\s+aligns?\s+with\s+[\w\s]+$/i;
 
 interface Thesis {
   asset: string;
@@ -86,6 +89,11 @@ export function parsePriceString(value: string): number | null {
 
   s = s.replace(/\([^)]*\)/g, '');
   s = s.trim();
+
+  // Strip trailing phrases (e.g. "aligns with BTC target")
+  while (TRAILING_PHRASES.test(s)) {
+    s = s.replace(TRAILING_PHRASES, '').trim();
+  }
 
   while (TRAILING_LABELS.test(s)) {
     s = s.replace(TRAILING_LABELS, '').trim();
