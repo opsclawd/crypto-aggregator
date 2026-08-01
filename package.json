@@ -23,6 +23,7 @@
     "emit:sr-levels": "tsx scripts/emit-sr-levels.ts",
     "emit:sr-levels:dry": "EMIT_SR_LEVELS_DRY_RUN=true tsx scripts/emit-sr-levels.ts",
     "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

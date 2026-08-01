@@ -3,31 +3,12 @@ import {
   parsePriceString,
   canonicalizeSource,
   buildNotes,
-  projectThesesToRequests
+  groupThesesBySource,
+  projectThesesToRequests,
+  projectThesesToRequestsV2,
+  SrLevelBriefRequestV2,
+  Thesis
 } from '../emit-sr-levels.js';
-
-type Thesis = {
-  asset: string;
-  timeframe: string;
-  bias: string;
-  setupType: string;
-  supportLevels: string[];
-  resistanceLevels: string[];
-  entryZone: string | null;
-  targets: string[];
-  invalidation: string | null;
-  trigger: string | null;
-  chartReference: string | null;
-  sourceHandle: string;
-  sourceChannel: string | null;
-  sourceKind: string;
-  sourceReliability: string;
-  rawThesisText: string;
-  collectedAt: string;
-  publishedAt: string | null;
-  sourceUrl: string | null;
-  notes: string | null;
-};
 
 function makeThesis(overrides: Partial<Thesis> = {}): Thesis {
   return {
@@ -145,6 +126,26 @@ describe('canonicalizeSource', () => {
 
   it('returns null for empty-after-normalization handle', () => {
     expect(canonicalizeSource('!!!')).toBeNull();
+  });
+});
+
+describe('groupThesesBySource', () => {
+  it('groups SOL theses by canonical source handle and calculates latestIso', () => {
+    const theses = [
+      makeThesis({
+        sourceHandle: 'morecryptoonline',
+        publishedAt: '2026-04-17T10:00:00.000Z'
+      }),
+      makeThesis({
+        sourceHandle: 'Morecryptoonl',
+        publishedAt: '2026-04-17T14:00:00.000Z'
+      })
+    ];
+    const groups = groupThesesBySource(theses);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]!.source).toBe('mco');
+    expect(groups[0]!.theses).toHaveLength(2);
+    expect(groups[0]!.latestIso).toBe('2026-04-17T14:00:00.000Z');
   });
 });
 
@@ -451,6 +452,28 @@ describe('projectThesesToRequests', () => {
   });
 });
 
+describe('projectThesesToRequestsV2', () => {
+  const date = '2026-04-17';
+
+  it('projects multiple theses from the same source into a single v2 request with -v2 briefId', () => {
+    const theses: Thesis[] = [
+      makeThesis({ supportLevels: ['$128'] }),
+      makeThesis({ resistanceLevels: ['$178\u2013$182'] })
+    ];
+    const requests = projectThesesToRequestsV2(theses, date);
+
+    expect(requests).toHaveLength(1);
+    const req = requests[0]!;
+    expect(req.schemaVersion).toBe('2.0');
+    expect(req.source).toBe('mco');
+    expect(req.symbol).toBe('SOL/USDC');
+    expect(req.brief.briefId).toBe('mco-sol-2026-04-17-v2');
+    expect(req.theses).toHaveLength(2);
+    expect(req.theses[0].supportLevels).toContain('$128');
+    expect(req.theses[1].resistanceLevels).toContain('$178\u2013$182');
+  });
+});
+
 describe('main (integration)', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
 
@@ -488,7 +511,7 @@ describe('main (integration)', () => {
     logSpy.mockRestore();
   });
 
-  it('retries on 500 then succeeds', async () => {
+  it('retries on 500 then succeeds for both v1 and v2', async () => {
     vi.useFakeTimers();
     process.env.REGIME_ENGINE_URL = 'https://example.com';
     process.env.REGIME_ENGINE_INGEST_TOKEN = 'test-token';
@@ -520,15 +543,26 @@ describe('main (integration)', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const mainPromise = main();
+    // Move timers forward enough for both v1 and v2 retries
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(1000);
     await vi.advanceTimersByTimeAsync(500);
     await vi.advanceTimersByTimeAsync(1000);
     await vi.runAllTimersAsync();
     await mainPromise;
 
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Inserted')
+    // Both v1 (3 calls) and v2 (1 call) since v2 succeeds on first try (callCount = 4). Total 4 calls.
+    expect(mockFetch).toHaveBeenCalledTimes(4);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/v1/sr-levels',
+      expect.any(Object)
     );
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/v2/sr-levels',
+      expect.any(Object)
+    );
+
     logSpy.mockRestore();
     warnSpy.mockRestore();
     vi.useRealTimers();
@@ -550,8 +584,48 @@ describe('main (integration)', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     const { main } = await import('../emit-sr-levels.js');
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(main()).rejects.toThrow('process.exit(1)');
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    errSpy.mockRestore();
+  });
+
+  it('proceeds to v2 requests even if v1 request fails', async () => {
+    process.env.REGIME_ENGINE_URL = 'https://example.com';
+    process.env.REGIME_ENGINE_INGEST_TOKEN = 'test-token';
+    process.env.THESES_PATH = new URL(
+      './fixtures/theses-2026-04-17.json',
+      import.meta.url
+    ).pathname;
+
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/v1/')) {
+        return Promise.resolve({
+          status: 400,
+          json: () => Promise.resolve({ error: 'bad request' })
+        });
+      }
+      return Promise.resolve({
+        status: 201,
+        json: () => Promise.resolve({ briefId: 'mco-sol-2026-04-17-v2', insertedCount: 1 })
+      });
+    });
+
+    vi.stubGlobal('fetch', mockFetch);
+
+    const { main } = await import('../emit-sr-levels.js');
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await expect(main()).rejects.toThrow('process.exit(1)');
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/v1/sr-levels',
+      expect.any(Object)
+    );
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/v2/sr-levels',
+      expect.any(Object)
+    );
+    errSpy.mockRestore();
   });
 });
