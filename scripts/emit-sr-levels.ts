@@ -36,7 +36,7 @@ const TRAILING_LABELS =
 const TRAILING_PHRASES =
   /\s+aligns?\s+with\s+[\w\s]+$/i;
 
-interface Thesis {
+export interface Thesis {
   asset: string;
   timeframe: string;
   bias: string;
@@ -77,6 +77,18 @@ interface SrLevelBriefRequest {
     summary?: string;
   };
   levels: LevelRow[];
+}
+
+export interface SrLevelBriefRequestV2 {
+  schemaVersion: '2.0';
+  source: string;
+  symbol: string;
+  brief: {
+    briefId: string;
+    sourceRecordedAtIso?: string;
+    summary?: string;
+  };
+  theses: Thesis[];
 }
 
 const BACKOFF_DELAYS = [500, 1000, 2000];
@@ -316,6 +328,66 @@ export function projectThesesToRequests(
         summary
       },
       levels
+    });
+  }
+
+  return requests;
+}
+
+export function projectThesesToRequestsV2(
+  theses: Thesis[],
+  date: string
+): SrLevelBriefRequestV2[] {
+  const solTheses = theses.filter(
+    (t) => t.asset.toLowerCase() === 'sol'
+  );
+
+  if (solTheses.length === 0) return [];
+
+  const bySource = new Map<string, Thesis[]>();
+  for (const t of solTheses) {
+    const canonical = canonicalizeSource(t.sourceHandle);
+    if (canonical === null) {
+      console.warn(
+        `sourceHandle '${t.sourceHandle}' normalized to empty, skipping for v2`
+      );
+      continue;
+    }
+    const group = bySource.get(canonical) ?? [];
+    group.push(t);
+    bySource.set(canonical, group);
+  }
+
+  const requests: SrLevelBriefRequestV2[] = [];
+
+  for (const [source, group] of bySource) {
+    let latestIso: string | undefined;
+
+    for (const thesis of group) {
+      const thesisIso = thesis.publishedAt ?? thesis.collectedAt;
+      if (thesisIso) {
+        const thesisMs = Date.parse(thesisIso);
+        const latestMs = latestIso ? Date.parse(latestIso) : -Infinity;
+        if (!Number.isNaN(thesisMs) && thesisMs > latestMs) {
+          latestIso = new Date(thesisMs).toISOString();
+        }
+      }
+    }
+
+    const briefId = `${source}-sol-${date}`;
+    const rawTexts = group.map((t) => t.rawThesisText).filter(Boolean);
+    const summary = rawTexts.join(' ').slice(0, 500);
+
+    requests.push({
+      schemaVersion: '2.0',
+      source,
+      symbol: 'SOL/USDC',
+      brief: {
+        briefId,
+        ...(latestIso ? { sourceRecordedAtIso: latestIso } : {}),
+        summary
+      },
+      theses: group
     });
   }
 

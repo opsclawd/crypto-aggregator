@@ -3,31 +3,11 @@ import {
   parsePriceString,
   canonicalizeSource,
   buildNotes,
-  projectThesesToRequests
+  projectThesesToRequests,
+  projectThesesToRequestsV2,
+  SrLevelBriefRequestV2,
+  Thesis
 } from '../emit-sr-levels.js';
-
-type Thesis = {
-  asset: string;
-  timeframe: string;
-  bias: string;
-  setupType: string;
-  supportLevels: string[];
-  resistanceLevels: string[];
-  entryZone: string | null;
-  targets: string[];
-  invalidation: string | null;
-  trigger: string | null;
-  chartReference: string | null;
-  sourceHandle: string;
-  sourceChannel: string | null;
-  sourceKind: string;
-  sourceReliability: string;
-  rawThesisText: string;
-  collectedAt: string;
-  publishedAt: string | null;
-  sourceUrl: string | null;
-  notes: string | null;
-};
 
 function makeThesis(overrides: Partial<Thesis> = {}): Thesis {
   return {
@@ -448,6 +428,28 @@ describe('projectThesesToRequests', () => {
     const requests = projectThesesToRequests(theses, date);
     expect(requests).toHaveLength(1);
     expect(requests[0]!.source).toBe('mco');
+  });
+});
+
+describe('projectThesesToRequestsV2', () => {
+  const date = '2026-04-17';
+
+  it('projects multiple theses from the same source into a single v2 request', () => {
+    const theses: Thesis[] = [
+      makeThesis({ supportLevels: ['$128'] }),
+      makeThesis({ resistanceLevels: ['$178\u2013$182'] })
+    ];
+    const requests = projectThesesToRequestsV2(theses, date);
+
+    expect(requests).toHaveLength(1);
+    const req = requests[0]!;
+    expect(req.schemaVersion).toBe('2.0');
+    expect(req.source).toBe('mco');
+    expect(req.symbol).toBe('SOL/USDC');
+    expect(req.brief.briefId).toBe('mco-sol-2026-04-17');
+    expect(req.theses).toHaveLength(2);
+    expect(req.theses[0].supportLevels).toContain('$128');
+    expect(req.theses[1].resistanceLevels).toContain('$178\u2013$182');
   });
 });
 
