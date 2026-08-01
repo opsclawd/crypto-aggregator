@@ -490,7 +490,7 @@ describe('main (integration)', () => {
     logSpy.mockRestore();
   });
 
-  it('retries on 500 then succeeds', async () => {
+  it('retries on 500 then succeeds for both v1 and v2', async () => {
     vi.useFakeTimers();
     process.env.REGIME_ENGINE_URL = 'https://example.com';
     process.env.REGIME_ENGINE_INGEST_TOKEN = 'test-token';
@@ -522,15 +522,26 @@ describe('main (integration)', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const mainPromise = main();
+    // Move timers forward enough for both v1 and v2 retries
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(1000);
     await vi.advanceTimersByTimeAsync(500);
     await vi.advanceTimersByTimeAsync(1000);
     await vi.runAllTimersAsync();
     await mainPromise;
 
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Inserted')
+    // Both v1 (3 calls) and v2 (1 call) since v2 succeeds on first try (callCount = 4). Total 4 calls.
+    expect(mockFetch).toHaveBeenCalledTimes(4);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/v1/sr-levels',
+      expect.any(Object)
     );
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/v2/sr-levels',
+      expect.any(Object)
+    );
+
     logSpy.mockRestore();
     warnSpy.mockRestore();
     vi.useRealTimers();

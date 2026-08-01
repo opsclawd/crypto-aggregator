@@ -397,7 +397,7 @@ export function projectThesesToRequestsV2(
 async function postWithRetry(
   url: string,
   token: string,
-  body: SrLevelBriefRequest
+  body: SrLevelBriefRequest | SrLevelBriefRequestV2
 ): Promise<{ status: number; body: unknown }> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -477,8 +477,9 @@ export async function main(): Promise<void> {
 
   const theses = raw as Thesis[];
   const requests = projectThesesToRequests(theses, date);
+  const v2Requests = projectThesesToRequestsV2(theses, date);
 
-  if (requests.length === 0) {
+  if (requests.length === 0 && v2Requests.length === 0) {
     console.log('No SOL theses to emit');
     return;
   }
@@ -486,6 +487,10 @@ export async function main(): Promise<void> {
   if (dryRun) {
     for (const req of requests) {
       console.log(`[DRY RUN] Would POST to ${url}/v1/sr-levels:`);
+      console.log(JSON.stringify(req, null, 2));
+    }
+    for (const req of v2Requests) {
+      console.log(`[DRY RUN] Would POST to ${url}/v2/sr-levels:`);
       console.log(JSON.stringify(req, null, 2));
     }
     return;
@@ -524,6 +529,43 @@ export async function main(): Promise<void> {
       default:
         exitWithError(
           `Unexpected status ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
+        );
+    }
+  }
+
+  const endpointV2 = `${url}/v2/sr-levels`;
+
+  for (const req of v2Requests) {
+    const result = await postWithRetry(endpointV2, token!, req);
+
+    switch (result.status) {
+      case 201: {
+        const b = result.body as { insertedCount?: number };
+        console.log(
+          `[v2] Inserted ${b.insertedCount ?? '?'} theses for brief ${req.brief.briefId}`
+        );
+        break;
+      }
+      case 200: {
+        console.log(
+          `[v2] Idempotent skip for brief ${req.brief.briefId} (already ingested)`
+        );
+        break;
+      }
+      case 400:
+      case 401:
+        exitWithError(
+          `[v2] Error ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
+        );
+        break;
+      case 409:
+        exitWithError(
+          `[v2] Conflict for brief ${req.brief.briefId} — same briefId with differing payload. Investigate manually. ${JSON.stringify(result.body)}`
+        );
+        break;
+      default:
+        exitWithError(
+          `[v2] Unexpected status ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
         );
     }
   }
