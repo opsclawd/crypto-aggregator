@@ -3,7 +3,7 @@ import { hashId } from './lib/common.js';
 import { isoDay, readJson, resolveFromRoot, writeJson } from './lib/fs.js';
 
 const ThesisSchema = z.object({
-  asset: z.enum(['btc', 'eth', 'sol']),
+  asset: z.enum(['btc', 'eth', 'sol', 'ada', 'xrp', 'link']),
   timeframe: z.enum(['intraday', 'swing', 'macro', 'unknown']),
   bias: z.enum(['bullish', 'bearish', 'neutral', 'mixed']),
   setupType: z.enum([
@@ -14,6 +14,9 @@ const ThesisSchema = z.object({
     'mean reversion',
     'reclaim',
     'rejection',
+    'bear flag',
+    'bull flag',
+    'reversal',
     'unknown'
   ]),
   supportLevels: z.array(z.string()),
@@ -100,7 +103,8 @@ function main(): void {
     process.exit(1);
   }
 
-  const parsed = z.array(ThesisSchema).safeParse(raw);
+  const thesesArray = Array.isArray(raw) ? raw : (raw as { theses: unknown }).theses;
+  const parsed = z.array(ThesisSchema).safeParse(thesesArray);
   if (!parsed.success) {
     console.error('Invalid theses JSON. Zod errors:');
     console.error(parsed.error.toString());

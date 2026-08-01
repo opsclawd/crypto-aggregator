@@ -194,8 +194,9 @@ function main(): void {
   }
 
   for (const file of listJsonFiles(xDir)) {
-    const payload = readJson<XRawItem[]>(file, []);
-    normalized.push(...payload.map(toNormalizedFromX));
+    const raw = readJson<any>(file, null);
+    const items: XRawItem[] = Array.isArray(raw) ? raw : (raw?.items ?? []);
+    normalized.push(...items.map(toNormalizedFromX));
   }
 
   const finalItems = dedupe(normalized);
