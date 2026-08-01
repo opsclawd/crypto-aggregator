@@ -229,10 +229,16 @@ export function buildNotes(
   return parts.join(' | ');
 }
 
-export function projectThesesToRequests(
+export interface GroupedTheses {
+  source: string;
+  theses: Thesis[];
+  latestIso?: string;
+}
+
+export function groupThesesBySource(
   theses: Thesis[],
-  date: string
-): SrLevelBriefRequest[] {
+  warnSuffix = ''
+): GroupedTheses[] {
   const solTheses = theses.filter(
     (t) => t.asset.toLowerCase() === 'sol'
   );
@@ -244,7 +250,7 @@ export function projectThesesToRequests(
     const canonical = canonicalizeSource(t.sourceHandle);
     if (canonical === null) {
       console.warn(
-        `sourceHandle '${t.sourceHandle}' normalized to empty, skipping`
+        `sourceHandle '${t.sourceHandle}' normalized to empty, skipping${warnSuffix}`
       );
       continue;
     }
@@ -253,13 +259,38 @@ export function projectThesesToRequests(
     bySource.set(canonical, group);
   }
 
-  const requests: SrLevelBriefRequest[] = [];
+  const result: GroupedTheses[] = [];
 
   for (const [source, group] of bySource) {
+    let latestIso: string | undefined;
+
+    for (const thesis of group) {
+      const thesisIso = thesis.publishedAt ?? thesis.collectedAt;
+      if (thesisIso) {
+        const thesisMs = Date.parse(thesisIso);
+        const latestMs = latestIso ? Date.parse(latestIso) : -Infinity;
+        if (!Number.isNaN(thesisMs) && thesisMs > latestMs) {
+          latestIso = new Date(thesisMs).toISOString();
+        }
+      }
+    }
+
+    result.push({ source, theses: group, latestIso });
+  }
+
+  return result;
+}
+
+export function projectThesesToRequests(
+  theses: Thesis[],
+  date: string
+): SrLevelBriefRequest[] {
+  const groups = groupThesesBySource(theses);
+  const requests: SrLevelBriefRequest[] = [];
+
+  for (const { source, theses: group, latestIso } of groups) {
     const levels: LevelRow[] = [];
     const seen = new Set<string>();
-
-    let latestIso: string | undefined;
 
     for (const thesis of group) {
       const rank = RANK_MAP[thesis.sourceReliability] ?? 'minor';
@@ -299,15 +330,6 @@ export function projectThesesToRequests(
           notes: buildNotes(thesis, raw, 'resistance')
         });
       }
-
-      const thesisIso = thesis.publishedAt ?? thesis.collectedAt;
-      if (thesisIso) {
-        const thesisMs = Date.parse(thesisIso);
-        const latestMs = latestIso ? Date.parse(latestIso) : -Infinity;
-        if (!Number.isNaN(thesisMs) && thesisMs > latestMs) {
-          latestIso = new Date(thesisMs).toISOString();
-        }
-      }
     }
 
     if (levels.length === 0) {
@@ -338,45 +360,13 @@ export function projectThesesToRequestsV2(
   theses: Thesis[],
   date: string
 ): SrLevelBriefRequestV2[] {
-  const solTheses = theses.filter(
-    (t) => t.asset.toLowerCase() === 'sol'
-  );
-
-  if (solTheses.length === 0) return [];
-
-  const bySource = new Map<string, Thesis[]>();
-  for (const t of solTheses) {
-    const canonical = canonicalizeSource(t.sourceHandle);
-    if (canonical === null) {
-      console.warn(
-        `sourceHandle '${t.sourceHandle}' normalized to empty, skipping for v2`
-      );
-      continue;
-    }
-    const group = bySource.get(canonical) ?? [];
-    group.push(t);
-    bySource.set(canonical, group);
-  }
-
+  const groups = groupThesesBySource(theses, ' for v2');
   const requests: SrLevelBriefRequestV2[] = [];
 
-  for (const [source, group] of bySource) {
-    let latestIso: string | undefined;
-
-    for (const thesis of group) {
-      const thesisIso = thesis.publishedAt ?? thesis.collectedAt;
-      if (thesisIso) {
-        const thesisMs = Date.parse(thesisIso);
-        const latestMs = latestIso ? Date.parse(latestIso) : -Infinity;
-        if (!Number.isNaN(thesisMs) && thesisMs > latestMs) {
-          latestIso = new Date(thesisMs).toISOString();
-        }
-      }
-    }
-
-    const briefId = `${source}-sol-${date}`;
+  for (const { source, theses: group, latestIso } of groups) {
+    const briefId = `${source}-sol-${date}-v2`;
     const rawTexts = group.map((t) => t.rawThesisText).filter(Boolean);
-    const summary = rawTexts.join(' ').slice(0, 500);
+    const summary = rawTexts.join(' ').slice(0, MAX_SUMMARY_LENGTH);
 
     requests.push({
       schemaVersion: '2.0',
@@ -496,78 +486,102 @@ export async function main(): Promise<void> {
     return;
   }
 
+  let hasError = false;
+
   const endpoint = `${url}/v1/sr-levels`;
 
   for (const req of requests) {
-    const result = await postWithRetry(endpoint, token!, req);
+    try {
+      const result = await postWithRetry(endpoint, token!, req);
 
-    switch (result.status) {
-      case 201: {
-        const b = result.body as { insertedCount?: number };
-        console.log(
-          `Inserted ${b.insertedCount ?? '?'} levels for brief ${req.brief.briefId}`
-        );
-        break;
+      switch (result.status) {
+        case 201: {
+          const b = result.body as { insertedCount?: number };
+          console.log(
+            `Inserted ${b.insertedCount ?? '?'} levels for brief ${req.brief.briefId}`
+          );
+          break;
+        }
+        case 200: {
+          console.log(
+            `Idempotent skip for brief ${req.brief.briefId} (already ingested)`
+          );
+          break;
+        }
+        case 400:
+        case 401:
+          console.error(
+            `Error ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
+          );
+          hasError = true;
+          break;
+        case 409:
+          console.error(
+            `Conflict for brief ${req.brief.briefId} — same briefId with differing payload. Investigate manually. ${JSON.stringify(result.body)}`
+          );
+          hasError = true;
+          break;
+        default:
+          console.error(
+            `Unexpected status ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
+          );
+          hasError = true;
+          break;
       }
-      case 200: {
-        console.log(
-          `Idempotent skip for brief ${req.brief.briefId} (already ingested)`
-        );
-        break;
-      }
-      case 400:
-      case 401:
-        exitWithError(
-          `Error ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
-        );
-        break;
-      case 409:
-        exitWithError(
-          `Conflict for brief ${req.brief.briefId} — same briefId with differing payload. Investigate manually. ${JSON.stringify(result.body)}`
-        );
-        break;
-      default:
-        exitWithError(
-          `Unexpected status ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
-        );
+    } catch (err) {
+      console.error(`Failed to emit brief ${req.brief.briefId}: ${err}`);
+      hasError = true;
     }
   }
 
   const endpointV2 = `${url}/v2/sr-levels`;
 
   for (const req of v2Requests) {
-    const result = await postWithRetry(endpointV2, token!, req);
+    try {
+      const result = await postWithRetry(endpointV2, token!, req);
 
-    switch (result.status) {
-      case 201: {
-        const b = result.body as { insertedCount?: number };
-        console.log(
-          `[v2] Inserted ${b.insertedCount ?? '?'} theses for brief ${req.brief.briefId}`
-        );
-        break;
+      switch (result.status) {
+        case 201: {
+          const b = result.body as { insertedCount?: number };
+          console.log(
+            `[v2] Inserted ${b.insertedCount ?? '?'} theses for brief ${req.brief.briefId}`
+          );
+          break;
+        }
+        case 200: {
+          console.log(
+            `[v2] Idempotent skip for brief ${req.brief.briefId} (already ingested)`
+          );
+          break;
+        }
+        case 400:
+        case 401:
+          console.error(
+            `[v2] Error ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
+          );
+          hasError = true;
+          break;
+        case 409:
+          console.error(
+            `[v2] Conflict for brief ${req.brief.briefId} — same briefId with differing payload. Investigate manually. ${JSON.stringify(result.body)}`
+          );
+          hasError = true;
+          break;
+        default:
+          console.error(
+            `[v2] Unexpected status ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
+          );
+          hasError = true;
+          break;
       }
-      case 200: {
-        console.log(
-          `[v2] Idempotent skip for brief ${req.brief.briefId} (already ingested)`
-        );
-        break;
-      }
-      case 400:
-      case 401:
-        exitWithError(
-          `[v2] Error ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
-        );
-        break;
-      case 409:
-        exitWithError(
-          `[v2] Conflict for brief ${req.brief.briefId} — same briefId with differing payload. Investigate manually. ${JSON.stringify(result.body)}`
-        );
-        break;
-      default:
-        exitWithError(
-          `[v2] Unexpected status ${result.status} for brief ${req.brief.briefId}: ${JSON.stringify(result.body)}`
-        );
+    } catch (err) {
+      console.error(`[v2] Failed to emit brief ${req.brief.briefId}: ${err}`);
+      hasError = true;
     }
+  }
+
+  if (hasError) {
+    exitWithError('One or more requests failed during execution.');
   }
 }
 
