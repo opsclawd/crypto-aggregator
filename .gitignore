@@ -19,3 +19,13 @@ out/delta-*.json
 out/morning-market-map-*.md
 out/midday-delta-*.md
 out/market-map-input.json
+
+# Orchestrator / agent run state (left in working tree by past runs).
+.ai-runs/
+.ai-tmp/
+.ai-worktrees/
+
+# Ad-hoc scratch files dumped at the repo root.
+*.vtt
+/tmp_*
+/run_fetch.sh
