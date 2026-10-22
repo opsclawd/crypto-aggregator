@@ -455,11 +455,8 @@ describe('projectThesesToRequests', () => {
 describe('projectThesesToRequestsV2', () => {
   const date = '2026-04-17';
 
-  it('projects multiple theses from the same source into a single v2 request with -v2 briefId', () => {
-    const theses: Thesis[] = [
-      makeThesis({ supportLevels: ['$128'] }),
-      makeThesis({ resistanceLevels: ['$178\u2013$182'] })
-    ];
+  it('projects a single thesis into a v2 request with -v2 briefId', () => {
+    const theses: Thesis[] = [makeThesis({ supportLevels: ['$128'] })];
     const requests = projectThesesToRequestsV2(theses, date);
 
     expect(requests).toHaveLength(1);
@@ -468,9 +465,77 @@ describe('projectThesesToRequestsV2', () => {
     expect(req.source).toBe('mco');
     expect(req.symbol).toBe('SOL/USDC');
     expect(req.brief.briefId).toBe('mco-sol-2026-04-17-v2');
-    expect(req.theses).toHaveLength(2);
+    expect(req.theses).toHaveLength(1);
     expect(req.theses[0].supportLevels).toContain('$128');
-    expect(req.theses[1].resistanceLevels).toContain('$178\u2013$182');
+  });
+
+  it('keeps theses from different raw handles as separate theses', () => {
+    const theses: Thesis[] = [
+      makeThesis({ sourceHandle: 'morecryptoonline', supportLevels: ['$128'] }),
+      makeThesis({
+        sourceHandle: 'Morecryptoonl',
+        resistanceLevels: ['$178\u2013$182']
+      })
+    ];
+    const requests = projectThesesToRequestsV2(theses, date);
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]!.theses).toHaveLength(2);
+    expect(requests[0]!.theses[0].supportLevels).toContain('$128');
+    expect(requests[0]!.theses[1].resistanceLevels).toContain(
+      '$178\u2013$182'
+    );
+  });
+
+  it('merges theses sharing (asset, sourceHandle) because /v2 rejects duplicate identities', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const theses: Thesis[] = [
+      makeThesis({
+        sourceHandle: 'Morecryptoonl',
+        supportLevels: ['$128'],
+        resistanceLevels: ['$178'],
+        publishedAt: '2026-04-17T10:00:00.000Z',
+        rawThesisText: 'older thesis'
+      }),
+      makeThesis({
+        sourceHandle: 'Morecryptoonl',
+        supportLevels: ['$120'],
+        resistanceLevels: ['$180'],
+        targets: ['$200'],
+        publishedAt: '2026-04-17T14:00:00.000Z',
+        rawThesisText: 'newer thesis'
+      })
+    ];
+    const requests = projectThesesToRequestsV2(theses, date);
+
+    expect(requests).toHaveLength(1);
+    const merged = requests[0]!.theses;
+    expect(merged).toHaveLength(1);
+    expect(merged[0].supportLevels).toEqual(['$128', '$120']);
+    expect(merged[0].resistanceLevels).toEqual(['$178', '$180']);
+    expect(merged[0].targets).toEqual(['$200']);
+    expect(merged[0].publishedAt).toBe('2026-04-17T14:00:00.000Z');
+    expect(merged[0].rawThesisText).toContain('older thesis');
+    expect(merged[0].rawThesisText).toContain('newer thesis');
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it('produces v2 requests with unique (source, symbol, briefId, asset, sourceHandle) identities', () => {
+    const theses: Thesis[] = [
+      makeThesis({ sourceHandle: 'Morecryptoonl', asset: 'sol' }),
+      makeThesis({ sourceHandle: 'Morecryptoonl', asset: 'sol' }),
+      makeThesis({ sourceHandle: 'Morecryptoonl', asset: 'sol' })
+    ];
+    const requests = projectThesesToRequestsV2(theses, date);
+
+    const keys = requests.flatMap((req) =>
+      req.theses.map(
+        (t) =>
+          `${req.source}|${req.symbol}|${req.brief.briefId}|${t.asset}|${t.sourceHandle}`
+      )
+    );
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });
 
