@@ -356,6 +356,83 @@ export function projectThesesToRequests(
   return requests;
 }
 
+/**
+ * The v2 contract rejects duplicate thesis identities inside a single request.
+ * The server identity key is (source, symbol, briefId, asset, sourceHandle),
+ * so within one request only (asset, sourceHandle) can discriminate theses
+ * (source, symbol and briefId are constant per request).
+ *
+ * The collector can legitimately surface several posts from the same handle
+ * about the same asset on the same day, so the projection merges those into a
+ * single thesis instead of sending them as duplicates:
+ *  - supportLevels / resistanceLevels / targets are unioned
+ *  - scalar fields come from the newest thesis (publishedAt ?? collectedAt)
+ *  - rawThesisText is concatenated
+ */
+export function mergeThesesByIdentity(theses: Thesis[]): Thesis[] {
+  const byIdentity = new Map<string, Thesis>();
+  const order: string[] = [];
+
+  for (const thesis of theses) {
+    const key = `${thesis.asset}\u0000${thesis.sourceHandle}`;
+    const existing = byIdentity.get(key);
+
+    if (!existing) {
+      byIdentity.set(key, thesis);
+      order.push(key);
+      continue;
+    }
+
+    const newest = isNewerThesis(thesis, existing) ? thesis : existing;
+    const older = newest === thesis ? existing : thesis;
+
+    byIdentity.set(key, {
+      ...newest,
+      supportLevels: unionStrings(older.supportLevels, newest.supportLevels),
+      resistanceLevels: unionStrings(
+        older.resistanceLevels,
+        newest.resistanceLevels
+      ),
+      targets: unionStrings(older.targets, newest.targets),
+      rawThesisText: [older.rawThesisText, newest.rawThesisText]
+        .map((t) => (t ?? '').trim())
+        .filter(Boolean)
+        .join('\n\n')
+    });
+  }
+
+  return order.map((key) => byIdentity.get(key)!);
+}
+
+function isNewerThesis(candidate: Thesis, current: Thesis): boolean {
+  const candidateIso = candidate.publishedAt ?? candidate.collectedAt;
+  const currentIso = current.publishedAt ?? current.collectedAt;
+
+  const candidateMs = candidateIso ? Date.parse(candidateIso) : NaN;
+  const currentMs = currentIso ? Date.parse(currentIso) : NaN;
+
+  if (Number.isNaN(candidateMs) && Number.isNaN(currentMs)) return false;
+  if (Number.isNaN(candidateMs)) return false;
+  if (Number.isNaN(currentMs)) return true;
+
+  return candidateMs > currentMs;
+}
+
+function unionStrings(a: string[], b: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+
+  for (const value of [...a, ...b]) {
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    if (seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+  }
+
+  return out;
+}
+
 export function projectThesesToRequestsV2(
   theses: Thesis[],
   date: string
@@ -368,6 +445,14 @@ export function projectThesesToRequestsV2(
     const rawTexts = group.map((t) => t.rawThesisText).filter(Boolean);
     const summary = rawTexts.join(' ').slice(0, MAX_SUMMARY_LENGTH);
 
+    const merged = mergeThesesByIdentity(group);
+    if (merged.length !== group.length) {
+      console.warn(
+        `Merged ${group.length} theses into ${merged.length} for brief ${briefId} ` +
+          `(duplicate (asset, sourceHandle) identity is rejected by /v2/sr-levels)`
+      );
+    }
+
     requests.push({
       schemaVersion: '2.0',
       source,
@@ -377,7 +462,7 @@ export function projectThesesToRequestsV2(
         ...(latestIso ? { sourceRecordedAtIso: latestIso } : {}),
         summary
       },
-      theses: group
+      theses: merged
     });
   }
 
